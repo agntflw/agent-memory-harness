@@ -1,0 +1,17 @@
+# systemd user timer template for the memory-health sweep (Linux).
+# Pairs with templates/systemd-user.service.template; see that file for the
+# install steps. OnUnitActiveSec=2d mirrors the launchd StartInterval of
+# 172800 seconds. Persistent=true fires a missed run at the next login
+# instead of silently skipping it.
+
+[Unit]
+Description=Run the agent-memory health sweep every 2 days
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=2d
+Persistent=true
+Unit=memory-health-sweep.service
+
+[Install]
+WantedBy=timers.target

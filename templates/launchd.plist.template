@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd template for the recurring memory-health sweep (macOS).
+
+  Replace every __PLACEHOLDER__ token, then install:
+
+    cp templates/launchd.plist.template ~/Library/LaunchAgents/__LABEL__.plist
+    launchctl load ~/Library/LaunchAgents/__LABEL__.plist
+
+  Tokens:
+    __LABEL__           reverse-DNS job label, e.g. com.example.memory-health
+                        (must match the installed plist filename sans .plist)
+    __REPO_ROOT__       absolute path to the repo that contains
+                        scripts/memory-health-sweep.sh
+    __OPERATOR_STORE__  absolute path to the operator memory store; the sweep
+                        refuses to run without MEMORY_SWEEP_OPERATOR_STORE
+    __LOG_PATH__        absolute path to a writable log file, e.g.
+                        ~/Library/Logs/memory-health-sweep.log (expanded)
+
+  StartInterval 172800 seconds = every 2 days. RunAtLoad is false so loading
+  the job does not fire an immediate sweep; run the script manually for an
+  on-demand pass. Remove this comment block or keep it - launchd ignores XML
+  comments either way.
+-->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>__LABEL__</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>__REPO_ROOT__/scripts/memory-health-sweep.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>MEMORY_SWEEP_OPERATOR_STORE</key>
+		<string>__OPERATOR_STORE__</string>
+	</dict>
+	<key>StartInterval</key>
+	<integer>172800</integer>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>StandardOutPath</key>
+	<string>__LOG_PATH__</string>
+	<key>StandardErrorPath</key>
+	<string>__LOG_PATH__</string>
+</dict>
+</plist>

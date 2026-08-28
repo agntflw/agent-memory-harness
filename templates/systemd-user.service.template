@@ -1,0 +1,28 @@
+# systemd user service template for the memory-health sweep (Linux).
+# Linux equivalent of templates/launchd.plist.template.
+#
+# Replace every __PLACEHOLDER__ token, then install alongside the timer:
+#
+#   cp templates/systemd-user.service.template \
+#      ~/.config/systemd/user/memory-health-sweep.service
+#   cp templates/systemd-user.timer.template \
+#      ~/.config/systemd/user/memory-health-sweep.timer
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now memory-health-sweep.timer
+#
+# Tokens:
+#   __REPO_ROOT__       absolute path to the repo that contains
+#                       scripts/memory-health-sweep.sh
+#   __OPERATOR_STORE__  absolute path to the operator memory store; the sweep
+#                       refuses to run without MEMORY_SWEEP_OPERATOR_STORE
+#
+# Output goes to the user journal:
+#   journalctl --user -u memory-health-sweep.service
+
+[Unit]
+Description=Agent-memory health sweep (report-only, plus operator-store snapshot)
+
+[Service]
+Type=oneshot
+Environment=MEMORY_SWEEP_OPERATOR_STORE=__OPERATOR_STORE__
+ExecStart=/bin/bash __REPO_ROOT__/scripts/memory-health-sweep.sh

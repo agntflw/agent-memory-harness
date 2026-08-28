@@ -1,0 +1,42 @@
+name: memory-health
+
+# Path-filtered gate for the agent memory store: verifies the committed
+# MEMORY.md byte-equals deterministic regeneration and that no hard hygiene
+# defect (dangling pointer, missing frontmatter, byte-duplicate, near-miss
+# wikilink) lands. Fires only when the memory tree or its tooling changes,
+# so feature PRs never pay for it. Warnings (exit 1) do not fail the job;
+# only hard failures (exit 2) do - and the checker fails closed (exit 2)
+# when ripgrep is missing, so it is installed explicitly below (ubuntu
+# runners do not ship it). The operator store lives outside the repo and is
+# covered by the local scheduled sweep, not by CI.
+
+on:
+  pull_request:
+    paths:
+      - ".claude/agent-memory/**"
+      - "scripts/memory-health.sh"
+      - "scripts/memory-index.sh"
+      - "scripts/memory-health-sweep.sh"
+      - ".github/workflows/memory-health.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  agent-store-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install ripgrep (the health checker fails closed without it)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ripgrep
+      - name: Run memory health check (gate on hard failures only)
+        run: |
+          set +e
+          scripts/memory-health.sh --profile agent .claude/agent-memory/agent
+          rc=$?
+          if [ "$rc" -ge 2 ]; then
+            echo "memory-health reported hard failures (exit $rc)"
+            exit "$rc"
+          fi
+          echo "memory-health exit $rc (warnings do not gate)"
