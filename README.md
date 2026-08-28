@@ -48,13 +48,17 @@ you the machinery to keep those invariants true:
 
 ## Browsable pages
 
-The kit ships two self-contained HTML pages; open them directly in a
-browser, no server needed:
+The kit ships two self-contained HTML pages, deployed with GitHub Pages:
 
-- [docs/harness-diagram.html](docs/harness-diagram.html) -- two figures
-  showing how the harness works end to end, including the mirror push.
-- [docs/kit.html](docs/kit.html) -- the entire kit on one page, every file
-  embedded with a per-file copy button.
+- [harness diagram](https://agntflw.github.io/agent-memory-harness/harness-diagram.html)
+  -- two figures showing how the harness works end to end, including the
+  mirror push.
+- [kit on one page](https://agntflw.github.io/agent-memory-harness/kit.html)
+  -- the core files embedded with a per-file copy button.
+
+The sources live at `docs/harness-diagram.html` and `docs/kit.html`; both
+are self-contained and also open directly in a browser from a clone, no
+server needed.
 
 ## Quickstart
 
