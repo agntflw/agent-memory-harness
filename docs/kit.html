@@ -1,0 +1,1725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agent Memory Kit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --bg:#F3F5F2; --surface:#FBFCFA; --codebg:#F7F9F5; --treebg:#FBFCFA;
+  --ink:#212823; --muted:#5F6C65; --accent:#176A50; --accent-soft:#E2EFE8;
+  --line:#D7DDD6; --line-soft:#E5E9E3;
+  --ok:#176A50; --warn:#8A6100; --fail:#A63A32;
+  --ok-bg:#E2EFE8; --warn-bg:#F4EAD1; --fail-bg:#F6E1DE;
+  --mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141917; --surface:#1A201D; --codebg:#171D1A; --treebg:#1A201D;
+    --ink:#E3E8E4; --muted:#96A29B; --accent:#5FC29E; --accent-soft:#1E3229;
+    --line:#2A332E; --line-soft:#232B27;
+    --ok:#5FC29E; --warn:#D5A852; --fail:#E0827A;
+    --ok-bg:#1E332A; --warn-bg:#332B18; --fail-bg:#37211E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141917; --surface:#1A201D; --codebg:#171D1A; --treebg:#1A201D;
+  --ink:#E3E8E4; --muted:#96A29B; --accent:#5FC29E; --accent-soft:#1E3229;
+  --line:#2A332E; --line-soft:#232B27;
+  --ok:#5FC29E; --warn:#D5A852; --fail:#E0827A;
+  --ok-bg:#1E332A; --warn-bg:#332B18; --fail-bg:#37211E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--serif);
+  font-size:16.5px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.page{max-width:900px;margin:0 auto;padding:48px 24px 96px}
+a{color:var(--accent);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+h1,h2,h3,h4{font-family:var(--mono);text-wrap:balance;margin:0}
+h1{font-size:32px;font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+h2{font-size:20px;font-weight:600;letter-spacing:-0.01em}
+p{margin:0 0 1em}
+p:last-child{margin-bottom:0}
+code,pre{font-family:var(--mono)}
+p code, li code, td code{font-size:0.82em;background:var(--accent-soft);
+  padding:1px 5px;border-radius:3px;white-space:nowrap}
+.kicker{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+header.masthead{border-bottom:1px solid var(--line);padding-bottom:28px}
+.masthead .sub{max-width:62ch;margin:14px 0 0;color:var(--muted);font-size:17px}
+.metarow{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:18px;
+  font-family:var(--mono);font-size:12px;color:var(--muted)}
+.metarow b{color:var(--ink);font-weight:500}
+section{margin-top:60px}
+section > h2{margin-bottom:14px}
+section > p, section li{max-width:66ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:20px 0 0}
+.store{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px}
+.store h3{font-size:14px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.store ul{margin:0;padding-left:18px}
+.store li{margin:5px 0;font-size:15px}
+ul.guarantees{margin:16px 0 0;padding-left:20px}
+ul.guarantees li{margin:10px 0}
+ul.guarantees b{font-weight:600}
+table.exit{border-collapse:collapse;margin-top:16px;width:100%;max-width:640px;font-size:15px}
+table.exit th{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--muted);text-align:left;padding:6px 14px 6px 0;
+  border-bottom:1px solid var(--line)}
+table.exit td{padding:9px 14px 9px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+.chip{font-family:var(--mono);font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;
+  white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.c0{background:var(--ok-bg);color:var(--ok)}
+.chip.c1{background:var(--warn-bg);color:var(--warn)}
+.chip.c2{background:var(--fail-bg);color:var(--fail)}
+.tree{background:var(--treebg);border:1px solid var(--line);border-radius:6px;
+  padding:18px 20px;overflow-x:auto;margin-top:18px}
+.tree pre{margin:0;font-size:12.75px;line-height:1.85}
+.tree .tn{color:var(--muted)}
+ol.steps{margin:20px 0 0;padding-left:0;counter-reset:step;list-style:none}
+ol.steps > li{counter-increment:step;position:relative;padding:0 0 22px 46px;max-width:none}
+ol.steps > li::before{content:counter(step);position:absolute;left:0;top:1px;
+  font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent);
+  background:var(--accent-soft);width:28px;height:28px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center}
+ol.steps > li:not(:last-child)::after{content:"";position:absolute;left:13.5px;top:34px;bottom:2px;
+  width:1px;background:var(--line)}
+ol.steps h3{font-size:14.5px;font-weight:600;margin-bottom:6px}
+ol.steps p{max-width:64ch;font-size:15.5px}
+.codewrap{background:var(--codebg);border:1px solid var(--line);border-radius:6px;overflow-x:auto}
+.codewrap pre{margin:0;padding:13px 16px;font-size:12.8px;line-height:1.55}
+.snippet{margin:10px 0 4px;max-width:760px}
+.group{margin-top:44px}
+.groupname{font-size:15px;font-weight:600;color:var(--accent);
+  border-bottom:1px solid var(--line);padding-bottom:8px}
+.groupintro{color:var(--muted);font-size:15px;max-width:66ch;margin:10px 0 0}
+.filecard{background:var(--surface);border:1px solid var(--line);border-radius:6px;
+  margin-top:20px;overflow:hidden}
+.filehead{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:flex-start;
+  justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+.filepath{font-size:14px;font-weight:600}
+.filedesc{font-size:14px;color:var(--muted);max-width:56ch;margin:5px 0 0}
+.filemeta{display:flex;align-items:center;gap:14px;flex-shrink:0;padding-top:2px}
+.fm{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+.copy{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--accent);
+  background:transparent;border:1px solid var(--accent);border-radius:4px;
+  padding:4px 12px;cursor:pointer;transition:background 0.12s,color 0.12s}
+.copy:hover{background:var(--accent-soft)}
+.copy.done{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.copy.fail{color:var(--fail);border-color:var(--fail)}
+.filecard .codewrap{border:none;border-radius:0;background:var(--codebg)}
+.filecard .codewrap pre{max-width:none}
+ul.rationale{margin:16px 0 0;padding-left:20px}
+ul.rationale li{margin:11px 0}
+ul.rationale b{font-weight:600}
+footer.foot{margin-top:72px;border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+@media (max-width:560px){
+  .page{padding:32px 16px 72px}
+  h1{font-size:26px}
+  .filehead{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="masthead"><p class="kicker">agent-memory-harness &middot; portable kit</p><h1>Agent Memory Kit</h1><p class="sub">A two-store memory harness for coding agents: a generated index, a falsification-tested health gate, one sanctioned scheduled writer, and a private mirror backup. Every file in the package is embedded on this page verbatim - copy the blocks out and you have reconstructed the entire repo.</p><div class="metarow"><span><b>11</b> files</span><span><b>66,703</b> bytes total</span><span>bash <b>3.2+</b> and <b>ripgrep</b> only</span><span>macOS and Linux</span></div></header>
+<section id="orientation"><p class="kicker">orientation</p><h2>What this is</h2><p>Agents that persist lessons across sessions accumulate a corpus of small markdown files. Left alone, that corpus rots: indexes drift from reality, links dangle, names fork, duplicates pile up - and nothing tells you when it happened. This harness treats the corpus as data with invariants and ships the machinery to keep those invariants true.</p><p>Memory lives in two stores with different trust surfaces:</p><div class="cols"><div class="store"><h3>operator store</h3><ul><li>Lives <em>outside</em> any repo (for example <code>~/agent-memory/</code>); personal and cross-project.</li><li>A flat directory of <code>&lt;slug&gt;.md</code> memories plus three tooling-owned names: <code>MEMORY.md</code> (generated index), <code>HEALTH.md</code> (sweep report), and <code>tmp_*</code> scratch files on a 7-day fuse.</li><li>Is itself a git repo with a private remote; the sweep commits and pushes snapshots.</li><li>Checked by the local scheduled sweep - CI cannot see it.</li></ul></div><div class="store"><h3>agent store</h3><ul><li>Lives <em>inside</em> the repo at <code>.claude/agent-memory/agent</code>; project-scoped, reviewed through PRs.</li><li>Holds <code>MEMORY.md</code> (generated index), <code>state.json</code> (tick checkpoint), <code>events/&lt;YYYY-MM-DD&gt;.md</code> (append-only day logs), and <code>lessons/&lt;slug&gt;.md</code> - the durable memories, the only files indexed and health-checked.</li><li>Gated by path-filtered CI on hard failures.</li></ul></div></div><h2 style="margin-top:40px">The guarantees</h2><ul class="guarantees"><li><b>The index cannot drift.</b> <code>MEMORY.md</code> is generated deterministically from file frontmatter by <code>memory-index.sh</code> - a projection of the store, never a hand-maintained document. The gate hard-fails when the committed index differs from regeneration.</li><li><b>The gate is falsification-tested.</b> <code>memory-health.sh</code> is read-only by contract, carries a strict exit-code contract, and ships with a mutation matrix (in <code>docs/OPERATIONS.md</code>) that proves every check fires before you trust it.</li><li><b>A missing tool never fakes health.</b> Without ripgrep the wikilink checks would return empty result sets - indistinguishable from clean - so the checker dies with exit 2 before running a single check.</li><li><b>Exactly one scheduled writer.</b> The sweep's writes are narrow and idempotent: one <code>HEALTH.md</code> overwrite per store plus a snapshot commit. Every possible misfire caps out at a stale report. It notifies only on <em>new</em> findings, never a 48-hour recital of known ones.</li><li><b>Names are immutable.</b> The frontmatter <code>name:</code> is the sole link identity; a wrong memory is superseded, never renamed, so no inbound link ever breaks retroactively.</li><li><b>Byte-identical everywhere.</b> Every script pins <code>LC_ALL=C</code>, so index output and line-set algebra agree across an interactive macOS shell, launchd, and a Linux CI runner.</li></ul><h2 style="margin-top:40px">Exit-code contract</h2><p>Both the health checker and the sweep honour the same contract; the sweep exits with the worst code across both stores, and <code>memory-index.sh</code> exits 2 on fatal errors, 0 otherwise.</p><table class="exit"><thead><tr><th>Exit</th><th>Meaning</th><th>Consequence</th></tr></thead><tbody><tr><td><span class="chip c0">0</span></td><td>clean</td><td>Informational lines only.</td></tr><tr><td><span class="chip c1">1</span></td><td>warnings present</td><td>Local and scheduled runs report without blocking; CI does not gate on warnings.</td></tr><tr><td><span class="chip c2">2</span></td><td>hard failure</td><td>Any hard check, or a broken precondition (ripgrep missing, unreadable store, bad usage). CI gates on &gt;= 2.</td></tr></tbody></table></section>
+<section id="manifest"><p class="kicker">manifest</p><h2>The package, file by file</h2><p>Each name links to its full embedded content below. To reconstruct the repo: create these paths, paste each block verbatim (every file ends with a trailing newline; the copy buttons preserve it), then <code>chmod&nbsp;+x&nbsp;scripts/memory-*.sh</code>.</p><div class="tree"><pre>agent-memory-harness/
+&#9500;&#9472;&#9472; <a href="#f-readme">README.md</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">orientation, quickstart, exit contract, FAQ</span>
+&#9500;&#9472;&#9472; scripts/
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-index-sh">memory-index.sh</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">deterministic MEMORY.md generator</span>
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-health-sh">memory-health.sh</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">read-only health gate, exit 0/1/2</span>
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; <a href="#f-sweep-sh">memory-health-sweep.sh</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">recurring sweep: report, snapshot, notify</span>
+&#9500;&#9472;&#9472; .github/workflows/
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; <a href="#f-ci-yml">memory-health.yml</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">path-filtered CI gate</span>
+&#9500;&#9472;&#9472; templates/
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-template-md">memory-template.md</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">canonical memory file shape</span>
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-launchd">launchd.plist.template</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">macOS scheduler, 2-day interval</span>
+&#9474;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-systemd-service">systemd-user.service.template</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">Linux scheduler, service half</span>
+&#9474;&nbsp;&nbsp; &#9492;&#9472;&#9472; <a href="#f-systemd-timer">systemd-user.timer.template</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">Linux scheduler, timer half</span>
+&#9492;&#9472;&#9472; docs/
+&nbsp;&nbsp;&nbsp; &#9500;&#9472;&#9472; <a href="#f-design-md">DESIGN.md</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">every decision, with rationale</span>
+&nbsp;&nbsp;&nbsp; &#9492;&#9472;&#9472; <a href="#f-operations-md">OPERATIONS.md</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tn">runbook, env vars, falsification recipe</span></pre></div></section>
+<section id="quickstart"><p class="kicker">quickstart</p><h2>From zero to a gated corpus</h2><p>Prerequisites: bash 3.2 or newer (macOS system bash is enough by design) and ripgrep on PATH (<code>brew install ripgrep</code> / <code>apt-get install ripgrep</code>). The full runbook, including the scheduler installs, is in the embedded <a href="#f-operations-md">docs/OPERATIONS.md</a>.</p><ol class="steps"><li><h3>Copy the scripts out</h3><p>Recreate the tree from the manifest above in your repo, then mark the scripts executable:</p><div class="codewrap snippet"><pre><code>chmod +x scripts/memory-*.sh</code></pre></div></li><li><h3>Initialize the stores</h3><p>Operator store: pick a directory outside any repo (for example <code>~/agent-memory/</code>) and write your first memory from <a href="#f-template-md">templates/memory-template.md</a>. Agent store: create <code>.claude/agent-memory/agent/lessons/</code> in the repo and put lesson files there. One file per memory; frontmatter carries <code>name</code>, <code>description</code>, and <code>type</code> (one of <code>feedback</code>, <code>project</code>, <code>reference</code>).</p></li><li><h3>Generate the index</h3><p>Idempotent; rerun after every memory change:</p><div class="codewrap snippet"><pre><code>scripts/memory-index.sh --profile operator ~/agent-memory \
+  &gt; ~/agent-memory/MEMORY.md
+scripts/memory-index.sh --profile agent .claude/agent-memory/agent \
+  &gt; .claude/agent-memory/agent/MEMORY.md</code></pre></div></li><li><h3>Run the health check</h3><div class="codewrap snippet"><pre><code>scripts/memory-health.sh --profile operator ~/agent-memory
+scripts/memory-health.sh --profile agent .claude/agent-memory/agent</code></pre></div><p>Add <code>--also-resolve &lt;other-store-root&gt;</code> to resolve cross-store <code>[[operator:...]]</code> / <code>[[agent:...]]</code> wikilinks against the other store.</p></li><li><h3>Wire CI</h3><p>Copy <a href="#f-ci-yml">.github/workflows/memory-health.yml</a> into your repo. It is path-filtered to the agent store and the harness tooling, installs ripgrep explicitly, and fails the job only on hard failures (exit 2).</p></li><li><h3>Schedule the sweep</h3><p>macOS: fill in the placeholders in <a href="#f-launchd">templates/launchd.plist.template</a> and load it with <code>launchctl</code>. Linux: install the <a href="#f-systemd-service">systemd user service</a> and <a href="#f-systemd-timer">timer</a> pair. Then set the one required environment variable - <code>MEMORY_SWEEP_OPERATOR_STORE</code> (the operator store lives outside the repo, so there is no portable default). Prefer pointing the scheduler at a dedicated stable clone; the dead-man section of <a href="#f-design-md">docs/DESIGN.md</a> explains why.</p></li><li><h3>Mirror the operator store</h3><div class="codewrap snippet"><pre><code>cd ~/agent-memory
+git init -b main &amp;&amp; git add -A &amp;&amp; git commit -m "Initial memory snapshot"
+git remote add origin &lt;private-repo-url&gt;
+git push -u origin main</code></pre></div><p>From then on the sweep commits and pushes snapshots automatically; an empty diff produces no commit, and a missing remote is skipped quietly.</p></li><li><h3>Falsify the gate once</h3><p>Never trust a gate you have not watched fire. Run the mutation matrix in <a href="#f-operations-md">docs/OPERATIONS.md</a> against a disposable fixture store: one seeded defect per hard check, each with its expected <code>FAIL</code> line and exit code. Repeat it after any change to <code>memory-health.sh</code>.</p></li></ol></section>
+<section id="files"><p class="kicker">the files</p><h2>Complete sources, verbatim</h2><p>Eleven files, unmodified from the verified package. Each card's copy button copies the exact file content, trailing newline included.</p><div class="group">
+<h3 class="groupname">Root</h3>
+<p class="groupintro">The package README. Everything on this page is also stated there, so the reconstructed repo is self-describing.</p>
+<article class="filecard" id="f-readme">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">README.md</h4>
+<p class="filedesc">Orientation for the whole kit: what the harness is, the layout, the quickstart, the exit-code contract, and the FAQ.</p></div>
+<div class="filemeta"><span class="fm">146 lines</span><span class="fm">7,102 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-readme">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-readme"># agent-memory-harness
+
+A two-store memory harness for coding agents.
+
+Agents that persist lessons across sessions accumulate a corpus of small
+markdown files. Left alone, that corpus rots: indexes drift from reality,
+links dangle, names fork, duplicates pile up, and nothing tells you when it
+happened. This harness treats the corpus as data with invariants and gives
+you the machinery to keep those invariants true:
+
+- Two stores. An **operator store** that lives outside any repo (personal,
+  cross-project, backed up to a private mirror) and an **agent store** that
+  lives inside the repo at `.claude/agent-memory/agent` (project-scoped,
+  reviewed through PRs, gated by CI).
+- A **generated index** (`MEMORY.md`), produced deterministically from file
+  frontmatter by `scripts/memory-index.sh`. The index is a projection of the
+  store, never a hand-maintained document.
+- A **falsification-tested health gate** (`scripts/memory-health.sh`), a
+  read-only checker with a strict exit-code contract and a documented
+  mutation matrix (see `docs/OPERATIONS.md`) so you can prove every check
+  fires before you trust it.
+- A **scheduled sweep** (`scripts/memory-health-sweep.sh`), the one
+  sanctioned recurring writer: it refreshes a `HEALTH.md` report per store,
+  snapshots the operator store to its backup repo, and raises a desktop
+  notification only when findings change.
+- A **private mirror backup** for the operator store: the store is itself a
+  git repo with a private remote; the sweep commits and pushes snapshots.
+
+## Layout
+
+    scripts/
+      memory-index.sh          deterministic MEMORY.md generator
+      memory-health.sh         read-only health checker (the gate)
+      memory-health-sweep.sh   recurring sweep: reports, snapshot, notify
+    .github/workflows/
+      memory-health.yml        path-filtered CI gate for the agent store
+    templates/
+      memory-template.md       canonical memory file shape
+      launchd.plist.template   macOS scheduler for the sweep
+      systemd-user.service.template   Linux scheduler (service half)
+      systemd-user.timer.template     Linux scheduler (timer half)
+    docs/
+      DESIGN.md                every design decision, with rationale
+      OPERATIONS.md            install runbook, env vars, falsification
+                               recipe, troubleshooting
+
+## Quickstart
+
+1. Copy `scripts/` into your repo and mark the scripts executable:
+
+       cp -R agent-memory-harness/scripts your-repo/scripts
+       chmod +x your-repo/scripts/memory-*.sh
+
+2. Initialize a store. For the operator store, pick a directory outside any
+   repo (for example `~/agent-memory/`) and write your first memory from
+   `templates/memory-template.md`. For the agent store, create
+   `.claude/agent-memory/agent/lessons/` in the repo and put lesson files
+   there. One file per memory; frontmatter carries `name`, `description`,
+   and `type` (one of `feedback`, `project`, `reference`).
+
+3. Generate the index (idempotent; rerun after every memory change):
+
+       scripts/memory-index.sh --profile operator ~/agent-memory \
+         &gt; ~/agent-memory/MEMORY.md
+       scripts/memory-index.sh --profile agent .claude/agent-memory/agent \
+         &gt; .claude/agent-memory/agent/MEMORY.md
+
+4. Run the health check:
+
+       scripts/memory-health.sh --profile operator ~/agent-memory
+       scripts/memory-health.sh --profile agent .claude/agent-memory/agent
+
+   Add `--also-resolve &lt;other-store-root&gt;` to resolve cross-store
+   `[[operator:...]]` / `[[agent:...]]` wikilinks against the other store.
+
+5. Wire CI. Copy `.github/workflows/memory-health.yml` into your repo. It is
+   path-filtered to the agent store and the harness tooling, installs
+   ripgrep explicitly (ubuntu runners do not ship it), and fails the job
+   only on hard failures (exit 2).
+
+6. Install the scheduler template for the recurring sweep. macOS: fill in
+   the placeholders in `templates/launchd.plist.template` and load it with
+   `launchctl`. Linux: install the systemd user service and timer pair.
+   Step-by-step instructions live in `docs/OPERATIONS.md`.
+
+7. Set the environment variables the sweep needs. Only one is required:
+   `MEMORY_SWEEP_OPERATOR_STORE` (the operator store lives outside the repo,
+   so there is no portable default). The full reference is in
+   `docs/OPERATIONS.md`.
+
+8. Add a private mirror remote for the operator store:
+
+       cd ~/agent-memory
+       git init -b main &amp;&amp; git add -A &amp;&amp; git commit -m "Initial memory snapshot"
+       git remote add origin &lt;private-repo-url&gt;
+       git push -u origin main
+
+   From then on the sweep commits and pushes snapshots automatically; an
+   empty diff produces no commit, and a missing remote is skipped quietly.
+
+## Exit-code contract
+
+Both `memory-health.sh` and the sweep honour the same contract:
+
+- `0` clean; informational lines only.
+- `1` warnings present. Local and scheduled runs report warnings without
+  blocking; CI does not gate on them.
+- `2` any hard failure -- including a broken precondition such as ripgrep
+  missing, an unreadable store, or bad usage. CI gates on `&gt;= 2`.
+
+The sweep exits with the worst code across both stores.
+`memory-index.sh` exits `2` on fatal errors and `0` otherwise.
+
+## FAQ
+
+**Why a generated index instead of maintaining MEMORY.md by hand?**
+A hand-maintained index is a dual-write: every memory change requires a
+matching index edit, and the failure mode is silent -- entries orphan, drift
+accumulates, and nothing detects it. A derived index cannot drift: it is a
+pure function of the corpus, regeneration is idempotent, and the health
+check verifies the committed index byte-equals regeneration. The full
+argument is in `docs/DESIGN.md`.
+
+**Why does the health check fail closed when ripgrep is missing?**
+Because a missing tool must never make a sick store look healthy. Without
+`rg`, the wikilink and checkpoint checks would return empty result sets --
+zero findings, exit 0 -- on a store full of broken links. Partial results
+that cannot be distinguished from clean results are worse than no results,
+so the checker dies with exit 2 instead. CI installs ripgrep explicitly for
+the same reason: ubuntu runners do not ship it.
+
+**Why `export LC_ALL=C` in every script?**
+Sort order is locale-dependent. The same store, indexed from an interactive
+macOS shell, a launchd job, and a CI runner, produced differently ordered
+output until the collation was pinned -- and index drift between
+environments looks exactly like a hygiene failure. Pinning `LC_ALL=C` makes
+sort order and line-set algebra byte-identical everywhere.
+
+**Why is a memory never renamed?**
+The frontmatter `name` is the sole link identity: wikilinks resolve against
+it, and greps for the slug are the dedup check before creating a new memory.
+Renaming breaks both -- every inbound link dangles and the lineage forks.
+A memory that has become wrong is superseded by a new memory that says so;
+the old name keeps resolving forever. Legacy files that diverged before the
+rule existed are handled by an empty-by-default grandfather allowlist, not
+by renaming (see `docs/DESIGN.md`).
+</code></pre></div>
+</article>
+</div>
+<div class="group">
+<h3 class="groupname">scripts/</h3>
+<p class="groupintro">The three executables. Copy them into scripts/ and mark them executable (chmod +x scripts/memory-*.sh). All three pin LC_ALL=C and prepend the common local bin directories so scheduler contexts can find ripgrep.</p>
+<article class="filecard" id="f-index-sh">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">scripts/memory-index.sh</h4>
+<p class="filedesc">Deterministic MEMORY.md generator. Output is a pure function of the corpus, written to stdout; sorted by type group, then filename, so each new memory diffs as exactly one line.</p></div>
+<div class="filemeta"><span class="fm">125 lines</span><span class="fm">4,878 B</span><span class="fm">mode 0755</span><button class="copy" type="button" data-target="c-f-index-sh">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-index-sh">#!/usr/bin/env bash
+# scripts/memory-index.sh
+# Deterministic MEMORY.md generator for an agent-memory store.
+#
+# The index is a projection of the store, never a hand-maintained document.
+# Regenerating it is idempotent: output is a pure function of the corpus.
+# Each entry line is: - [&lt;name&gt;](&lt;relpath&gt;) — &lt;description&gt;
+# with name and description taken verbatim from the file's frontmatter.
+# A derived index cannot drift the way a hand-maintained dual-write does.
+#
+# Sort order is metadata.type group (feedback, project, reference), then
+# alphabetical by filename. Deliberately NOT recency: mtime is not stable
+# across clones and recency is recoverable from git log, while deterministic
+# one-line diffs per added memory are not recoverable from a recency sort.
+#
+# Frontmatter contract (enforced by memory-health.sh, assumed here): exactly
+# one single-line `name:` and one single-line `description:` per file, and a
+# `type:` line (nested under `metadata:` or top-level) whose value is one of
+# feedback|project|reference.
+#
+# Usage:
+#   scripts/memory-index.sh --profile operator|agent &lt;store-root&gt;
+#
+# Profiles:
+#   operator  files are &lt;store-root&gt;/*.md minus MEMORY.md, HEALTH.md, tmp_*
+#   agent     files are &lt;store-root&gt;/lessons/*.md
+#
+# Output goes to stdout. To apply: memory-index.sh ... &gt; &lt;store-root&gt;/MEMORY.md
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+# Pin collation: the index must be byte-identical no matter which locale the
+# invoking shell carries (interactive macOS shell vs launchd vs CI runner);
+# an unpinned collation drifts the sort order across locales.
+export LC_ALL=C
+
+die() { printf 'memory-index: FATAL: %s\n' "$*" &gt;&amp;2; exit 2; }
+
+PROFILE="" STORE=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --profile) PROFILE="${2:-}"; shift 2 ;;
+    -*) die "unknown option: $1" ;;
+    *) STORE="$1"; shift ;;
+  esac
+done
+[ -n "$PROFILE" ] &amp;&amp; [ -n "$STORE" ] || die "usage: memory-index.sh --profile operator|agent &lt;store-root&gt;"
+[ -d "$STORE" ] || die "store root not found: $STORE"
+
+case "$PROFILE" in
+  operator)
+    list_files() { (cd "$STORE" &amp;&amp; ls -- *.md 2&gt;/dev/null) | grep -v -e '^MEMORY\.md$' -e '^HEALTH\.md$' -e '^tmp_' | sort || true; }
+    rel() { printf '%s\n' "$1"; }
+    header() {
+      cat &lt;&lt;'EOF'
+&lt;!-- GENERATED by scripts/memory-index.sh - do not edit by hand.
+     Regenerate: scripts/memory-index.sh --profile operator &lt;this-dir&gt; &gt; MEMORY.md
+     One line per memory: name and description verbatim from frontmatter.
+     Sorted by type group, then filename. --&gt;
+EOF
+    }
+    ;;
+  agent)
+    list_files() { (cd "$STORE" &amp;&amp; ls -- lessons/*.md 2&gt;/dev/null) | sort || true; }
+    rel() { printf '%s\n' "$1"; }
+    header() {
+      cat &lt;&lt;'EOF'
+# agent memory index
+
+&lt;!-- GENERATED by scripts/memory-index.sh - do not edit by hand.
+     Regenerate: scripts/memory-index.sh --profile agent .claude/agent-memory/agent &gt; MEMORY.md --&gt;
+
+This file is the index for the agent's persistent project memory. It is
+loaded automatically into the agent's system prompt on every invocation (first
+200 lines). It is an index, not a memory: one line per lesson, name and
+description taken verbatim from the lesson frontmatter, sorted by type group
+then filename so each new lesson diffs as exactly one line. Recency is
+recoverable from git log; deterministic diffs are not recoverable from a
+recency sort. CI verifies this file byte-equals regeneration.
+
+Layout under `.claude/agent-memory/agent/`:
+
+- `MEMORY.md` — this generated index.
+- `state.json` — tick state (last_tick_iso, tick_count, consecutive_empty_ticks).
+- `events/&lt;YYYY-MM-DD&gt;.md` — one file per UTC day, append a section per tick.
+- `lessons/&lt;slug&gt;.md` — durable lessons promoted from repeated patterns.
+
+No icons. Anywhere.
+EOF
+    }
+    ;;
+  *) die "unknown profile: $PROFILE" ;;
+esac
+
+# Frontmatter block only: the lines between the leading '---' delimiters.
+# A file not starting with '---' yields empty output (memory-health.sh fails
+# it hard). Bounding here keeps a memory free to quote its own template
+# (a fenced 'name:' line in the body) without corrupting the index.
+fm() { awk 'NR==1{if($0!="---")exit; next} /^---$/{exit} {print}' "$1"; }
+fm_field() { # $1=file $2=key -&gt; first single-line value, YAML quotes stripped
+  fm "$1" | sed -n "s/^$2: *//p" | head -1 | sed -E 's/^"(.*)"$/\1/; s/^'"'"'(.*)'"'"'$/\1/'
+}
+fm_type() { # nested metadata.type preferred, top-level tolerated
+  fm "$1" | sed -n 's/^[[:space:]]*type: *//p' | head -1
+}
+
+header
+for want in feedback project reference; do
+  section=""
+  while IFS= read -r f; do
+    [ -n "$f" ] || continue
+    t=$(fm_type "$STORE/$f")
+    [ "$t" = "$want" ] || continue
+    n=$(fm_field "$STORE/$f" name)
+    d=$(fm_field "$STORE/$f" description)
+    section="${section}- [${n}]($(rel "$f")) — ${d}
+"
+  done &lt;&lt;EOF
+$(list_files)
+EOF
+  if [ -n "$section" ]; then
+    printf '\n## %s\n\n%s' "$want" "$section"
+  fi
+done
+</code></pre></div>
+</article>
+<article class="filecard" id="f-health-sh">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">scripts/memory-health.sh</h4>
+<p class="filedesc">The read-only health gate: eleven hard checks, five warning tiers, informational counts. Exits 0 clean, 1 warnings, 2 any hard failure - and fails closed (exit 2) when ripgrep is missing.</p></div>
+<div class="filemeta"><span class="fm">306 lines</span><span class="fm">14,375 B</span><span class="fm">mode 0755</span><button class="copy" type="button" data-target="c-f-health-sh">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-health-sh">#!/usr/bin/env bash
+# scripts/memory-health.sh
+# Read-only health checker for an agent-memory store. Never mutates anything.
+#
+# Exit contract: 0 clean/info, 1 warnings present, 2 any hard failure.
+# CI gates on &gt;= 2; local and scheduled runs report 1 without blocking.
+#
+# Checks (H = hard failure, W = warning, I = informational):
+#   H  index drift          MEMORY.md differs from memory-index.sh regeneration
+#   H  dangling index ptr   index entry whose file does not exist
+#   H  frontmatter keys     name/description/type missing or duplicated
+#   H  non-slug name        name is not kebab-case (the name is the link
+#                           identity; prose titles rot into dangling links)
+#   H  empty name           'name:' present with an empty value (nameless
+#                           memories index as broken links)
+#   H  name-identity split  normalized basename differs from normalized
+#                           frontmatter name (a diverged name forks the dedup
+#                           lineage; pre-rule divergences are grandfathered)
+#   H  type fragmentation   type value outside feedback|project|reference
+#   H  byte duplicates      two files with identical content
+#   H  near-miss wikilink   [[target]] that resolves after slug normalization
+#                           (strip type prefix, underscores to dashes): a typo,
+#                           not an aspiration - fix the link at the link site
+#   H  expired tmp scratch  tmp_* older than 7 days (operator profile)
+#   H  checkpoint behind    state.json last_tick_iso &lt; newest event stamp
+#                           (agent profile, only when events/ present)
+#   W  aspirational link    [[target]] with no normalized match; escalates to H
+#                           when 2+ distinct files reference the same target
+#   W  tmp scratch present  any tmp_* file (operator profile)
+#   W  index line budget    generated index &gt; 190 lines (agent 200-line
+#                           prompt-load budget)
+#   W  date-bearing slug    filename embeds a date - mutable data in an
+#                           immutable identity (grandfathered slugs allowlisted)
+#   W  cross-store link     [[operator:x]] / [[agent:x]] unresolvable when
+#                           --also-resolve given; info when resolver absent
+#                           (CI cannot see the operator home directory)
+#   I  counts, type histogram, staleness listing (oldest dated stamps)
+#
+# Identity rule this checker encodes: the frontmatter `name:` is the sole
+# identity of a memory; wikilinks resolve against names union filenames sans
+# extension; files are never renamed - links are fixed at the link site.
+#
+# Toolchain: bash 3.2 + ripgrep + POSIX line-set algebra only, by decision.
+# Flip trigger to a real parser: the day frontmatter needs nesting beyond
+# single-line scalars, or a health run exceeds 5s, or a store crosses 2000
+# files.
+#
+# Usage:
+#   scripts/memory-health.sh --profile operator|agent &lt;store-root&gt;
+#                            [--also-resolve &lt;other-store-root&gt;]
+
+set -uo pipefail
+IFS=$'\n\t'
+
+# Pin collation: sort order and line-set algebra must not vary with the
+# invoking locale (interactive macOS shell vs launchd vs CI runner).
+export LC_ALL=C
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" &amp;&amp; pwd)
+die() { printf 'memory-health: FATAL: %s\n' "$*" &gt;&amp;2; exit 2; }
+
+# launchd and CI runners start with a bare PATH that misses Homebrew/local
+# bins. ripgrep is a hard dependency: without rg the wikilink and checkpoint
+# checks would yield empty result sets and a sick store would report healthy.
+# Fail closed instead of reporting partial results. Note: ubuntu CI runners
+# do not ship ripgrep - install it explicitly in the workflow.
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+command -v rg &gt; /dev/null 2&gt;&amp;1 || die "ripgrep (rg) not found on PATH - the wikilink and checkpoint checks depend on it, and partial results must not report a store as healthy"
+
+PROFILE="" STORE="" OTHER=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --profile) PROFILE="${2:-}"; shift 2 ;;
+    --also-resolve) OTHER="${2:-}"; shift 2 ;;
+    -*) die "unknown option: $1" ;;
+    *) STORE="$1"; shift ;;
+  esac
+done
+[ -n "$PROFILE" ] &amp;&amp; [ -n "$STORE" ] || die "usage: memory-health.sh --profile operator|agent &lt;store-root&gt; [--also-resolve &lt;path&gt;]"
+[ -d "$STORE" ] || die "store root not found: $STORE"
+
+# Grandfathered date-bearing slugs: files created before the immutable-slug
+# rule may be allowlisted here, one slug per line (basename without .md), so
+# the date-bearing-slug warning skips them. Ships empty on purpose: a fresh
+# adoption has no pre-rule history to grandfather. Do not add entries for new
+# files - fix the name instead.
+GRANDFATHER=''
+
+# Grandfathered name-identity divergences: files whose frontmatter name grew
+# away from the filename before the name-identity rule existed may be
+# allowlisted here, one slug per line, kept per never-rename. Ships empty on
+# purpose. Do not add entries for new files - a divergence is repaired by
+# superseding the memory, never by renaming it.
+GRANDFATHER_DIVERGED=''
+
+case "$PROFILE" in
+  operator)
+    FILES=$( (cd "$STORE" &amp;&amp; ls -- *.md 2&gt;/dev/null) | grep -v -e '^MEMORY\.md$' -e '^HEALTH\.md$' -e '^tmp_' | sort || true)
+    SUBDIR=""
+    ;;
+  agent)
+    FILES=$( (cd "$STORE" &amp;&amp; ls -- lessons/*.md 2&gt;/dev/null) | sort || true)
+    SUBDIR="lessons/"
+    ;;
+  *) die "unknown profile: $PROFILE" ;;
+esac
+[ -n "$FILES" ] || die "no memory files found under $STORE (profile $PROFILE)"
+
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
+HARD=0 WARN=0
+
+hard() { HARD=$((HARD + 1)); printf 'FAIL  %s\n' "$*"; }
+warn() { WARN=$((WARN + 1)); printf 'WARN  %s\n' "$*"; }
+info() { printf 'info  %s\n' "$*"; }
+
+abs() { case "$1" in /*) printf '%s\n' "$1" ;; *) printf '%s/%s\n' "$(pwd)" "$1" ;; esac; }
+STORE_ABS=$(abs "$STORE")
+
+# Slug normalization: strip type prefix, underscores to dashes.
+normalize() { sed -E 's/^(feedback|project|reference|tmp)[-_]//; s/_/-/g'; }
+
+# Frontmatter block only: the lines between the leading '---' delimiters.
+# A file not starting with '---' yields empty output, so the key-count check
+# below still fails hard. Bounding here keeps a memory free to quote its own
+# template (a fenced 'name:' line in the body) without confusing the checker.
+fm() { awk 'NR==1{if($0!="---")exit; next} /^---$/{exit} {print}' "$1"; }
+
+printf '== memory-health: profile=%s store=%s ==\n' "$PROFILE" "$STORE"
+
+# --- resolution sets -------------------------------------------------------
+: &gt; "$WORK/slugs"; : &gt; "$WORK/names"
+while IFS= read -r f; do
+  basename "$f" .md &gt;&gt; "$WORK/slugs"
+  fm "$STORE/$f" | sed -n 's/^name: *//p' | head -1 &gt;&gt; "$WORK/names"
+done &lt;&lt;EOF
+$FILES
+EOF
+sort -u "$WORK/slugs" "$WORK/names" | grep -v '^$' &gt; "$WORK/resolve"
+sort -u "$WORK/resolve" | normalize | sort -u &gt; "$WORK/resolve_norm"
+
+# --- frontmatter keys and type values --------------------------------------
+while IFS= read -r f; do
+  p="$STORE/$f"
+  for key in name description; do
+    c=$(fm "$p" | grep -c "^$key: " || true)
+    [ "$c" -eq 1 ] || hard "frontmatter: $f has $c '$key:' lines (want exactly 1)"
+  done
+  n=$(fm "$p" | sed -n 's/^name: *//p' | head -1 | sed -E 's/^"(.*)"$/\1/')
+  if [ -z "$n" ] &amp;&amp; fm "$p" | grep -q '^name:'; then
+    hard "frontmatter: $f has 'name:' with an empty value - nameless memories index as broken links"
+  fi
+  if [ -n "$n" ] &amp;&amp; ! printf '%s' "$n" | grep -Eq '^[a-z0-9]+(-[a-z0-9]+)*$'; then
+    hard "name is not a kebab slug: $f has name '$n' - the name is the link identity, it must be a stable slug"
+  fi
+  if [ -n "$n" ]; then
+    slug=$(basename "$f" .md)
+    if ! printf '%s\n' "$GRANDFATHER_DIVERGED" | grep -qx "$slug"; then
+      slug_norm=$(printf '%s\n' "$slug" | normalize)
+      name_norm=$(printf '%s\n' "$n" | normalize)
+      if [ "$slug_norm" != "$name_norm" ]; then
+        hard "name-identity divergence: $f has name '$n' - a diverged name forks the dedup lineage: slug-grep misses the name and vice versa; repair by superseding, never by renaming"
+      fi
+    fi
+  fi
+  t=$(fm "$p" | sed -n 's/^[[:space:]]*type: *//p' | head -1)
+  case "$t" in
+    feedback|project|reference) : ;;
+    "") hard "frontmatter: $f has no type" ;;
+    *) hard "type fragmentation: $f has type '$t' (want feedback|project|reference)" ;;
+  esac
+done &lt;&lt;EOF
+$FILES
+EOF
+
+# --- index drift + dangling pointers ---------------------------------------
+if [ -f "$STORE/MEMORY.md" ]; then
+  "$SCRIPT_DIR/memory-index.sh" --profile "$PROFILE" "$STORE" &gt; "$WORK/generated" 2&gt;/dev/null \
+    || hard "index generator failed for $STORE"
+  if [ -s "$WORK/generated" ] &amp;&amp; ! diff -q "$WORK/generated" "$STORE/MEMORY.md" &gt; /dev/null 2&gt;&amp;1; then
+    hard "index drift: MEMORY.md differs from regeneration (run: memory-index.sh --profile $PROFILE $STORE &gt; $STORE/MEMORY.md)"
+    diff "$WORK/generated" "$STORE/MEMORY.md" | sed -n '1,12p' | sed 's/^/      /'
+  fi
+  rg -o '\]\(([^)]+\.md)\)' -r '$1' "$STORE/MEMORY.md" 2&gt;/dev/null | sort -u &gt; "$WORK/indexed" || true
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    [ -f "$STORE/$rel" ] || hard "dangling index pointer: $rel"
+  done &lt; "$WORK/indexed"
+  lines=$(wc -l &lt; "$STORE/MEMORY.md" | tr -d ' ')
+  [ "$lines" -le 190 ] || warn "index line budget: MEMORY.md has $lines lines (budget 190 of the 200-line prompt load)"
+else
+  hard "no MEMORY.md index in $STORE"
+fi
+
+# --- byte duplicates -------------------------------------------------------
+( cd "$STORE" &amp;&amp; shasum $FILES 2&gt;/dev/null ) | sort | awk '{print $1}' | uniq -d &gt; "$WORK/dupes" || true
+if [ -s "$WORK/dupes" ]; then
+  while IFS= read -r h; do
+    hard "byte-duplicate files: $( (cd "$STORE" &amp;&amp; shasum $FILES) | awk -v H="$h" '$1==H{print $2}' | tr '\n' ' ')"
+  done &lt; "$WORK/dupes"
+fi
+
+# --- wikilinks -------------------------------------------------------------
+( cd "$STORE" &amp;&amp; rg -o '\[\[([^]|]+)\]\]' -r '$1' --no-filename $FILES 2&gt;/dev/null ) | sort -u &gt; "$WORK/links" || true
+while IFS= read -r target; do
+  [ -n "$target" ] || continue
+  case "$target" in
+    operator:*|agent:*)
+      bare=${target#*:}
+      if [ -n "$OTHER" ] &amp;&amp; [ -d "$OTHER" ]; then
+        if [ ! -f "$WORK/other_resolve" ]; then
+          for of in "$OTHER"/*.md "$OTHER"/lessons/*.md; do
+            [ -f "$of" ] || continue
+            basename "$of" .md &gt;&gt; "$WORK/other_resolve"
+            fm "$of" | sed -n 's/^name: *//p' | head -1 | sed -E 's/^"(.*)"$/\1/' &gt;&gt; "$WORK/other_resolve"
+          done
+          : &gt;&gt; "$WORK/other_resolve"
+        fi
+        grep -qx "$bare" "$WORK/other_resolve" || warn "cross-store link unresolvable: [[${target}]]"
+      else
+        info "cross-store link (no resolver given): [[${target}]]"
+      fi
+      continue ;;
+  esac
+  grep -qx "$target" "$WORK/resolve" &amp;&amp; continue
+  tn=$(printf '%s\n' "$target" | normalize)
+  if grep -qx "$tn" "$WORK/resolve_norm"; then
+    suggestion=$(while IFS= read -r r; do [ "$(printf '%s\n' "$r" | normalize)" = "$tn" ] &amp;&amp; printf '%s ' "$r"; done &lt; "$WORK/resolve")
+    referrers=$( (cd "$STORE" &amp;&amp; rg -lF "[[${target}]]" $FILES 2&gt;/dev/null) | tr '\n' ' ')
+    hard "near-miss wikilink: [[${target}]] in ${referrers}- did you mean: ${suggestion}"
+  else
+    refcount=$( (cd "$STORE" &amp;&amp; rg -lF "[[${target}]]" $FILES 2&gt;/dev/null) | wc -l | tr -d ' ')
+    if [ "$refcount" -ge 2 ]; then
+      hard "aspirational wikilink in $refcount files: [[${target}]] - two files rely on a memory that does not exist; write it or fix the links"
+    else
+      warn "aspirational wikilink: [[${target}]] (allowed while single-referenced)"
+    fi
+  fi
+done &lt; "$WORK/links"
+
+# --- slug lint: dates in filenames -----------------------------------------
+while IFS= read -r f; do
+  slug=$(basename "$f" .md)
+  printf '%s\n' "$GRANDFATHER" | grep -qx "$slug" &amp;&amp; continue
+  if printf '%s\n' "$slug" | rg -q '20[0-9]{2}[-_][0-9]{2}[-_][0-9]{2}|20[0-9]{2}$'; then
+    warn "date-bearing slug: $f (mutable data in an immutable identity; frontmatter holds dates)"
+  fi
+done &lt;&lt;EOF
+$FILES
+EOF
+
+# --- tmp scratch lifecycle (operator profile) ------------------------------
+if [ "$PROFILE" = "operator" ]; then
+  expired=$(find "$STORE_ABS" -maxdepth 1 -name 'tmp_*' -mtime +7 2&gt;/dev/null || true)
+  if [ -n "$expired" ]; then
+    while IFS= read -r f; do hard "expired tmp scratch (&gt;7 days): $(basename "$f") - promote to a memory or delete"; done &lt;&lt;EOF
+$expired
+EOF
+  fi
+  fresh=$(find "$STORE_ABS" -maxdepth 1 -name 'tmp_*' -mtime -8 2&gt;/dev/null || true)
+  if [ -n "$fresh" ]; then
+    while IFS= read -r f; do warn "tmp scratch present: $(basename "$f") (7-day fuse; staging belongs in the session scratchpad)"; done &lt;&lt;EOF
+$fresh
+EOF
+  fi
+fi
+
+# --- agent checkpoint reconciliation ---------------------------------------
+if [ "$PROFILE" = "agent" ] &amp;&amp; [ -d "$STORE/events" ] &amp;&amp; [ -f "$STORE/state.json" ]; then
+  ckpt=$(rg -o '"last_tick_iso" *: *"([^"]+)"' -r '$1' "$STORE/state.json" | head -1)
+  newest=$(rg -o '20[0-9]{2}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z' --no-filename "$STORE"/events/*.md 2&gt;/dev/null | sort | tail -1)
+  if [ -n "$ckpt" ] &amp;&amp; [ -n "$newest" ]; then
+    if [ "$(printf '%s\n%s\n' "$ckpt" "$newest" | sort | tail -1)" != "$ckpt" ]; then
+      hard "checkpoint behind log: state.json last_tick_iso=$ckpt &lt; newest event stamp $newest"
+    else
+      info "checkpoint ok: last_tick_iso=$ckpt &gt;= newest event stamp"
+    fi
+  fi
+fi
+
+# --- informational ---------------------------------------------------------
+total=$(printf '%s\n' "$FILES" | grep -c . || true)
+info "files: $total  wikilinks: $(wc -l &lt; "$WORK/links" | tr -d ' ') distinct targets"
+for t in feedback project reference; do
+  c=0
+  while IFS= read -r f; do
+    [ "$(fm "$STORE/$f" | sed -n 's/^[[:space:]]*type: *//p' | head -1)" = "$t" ] &amp;&amp; c=$((c + 1))
+  done &lt;&lt;EOF
+$FILES
+EOF
+  info "type $t: $c"
+done
+cutoff=$(date -v-180d +%F 2&gt;/dev/null || date -d '-180 days' +%F 2&gt;/dev/null || echo 1970-01-01)
+stale=0
+while IFS= read -r f; do
+  newest_stamp=$(rg -o '20[0-9]{2}-[0-9]{2}-[0-9]{2}' --no-filename "$STORE/$f" 2&gt;/dev/null | sort | tail -1)
+  [ -n "$newest_stamp" ] &amp;&amp; [ "$newest_stamp" \&lt; "$cutoff" ] &amp;&amp; stale=$((stale + 1))
+done &lt;&lt;EOF
+$FILES
+EOF
+info "staleness: $stale files whose newest date stamp predates $cutoff (informational; supersede or revalidate when touched)"
+
+printf '== result: %d hard failure(s), %d warning(s) ==\n' "$HARD" "$WARN"
+[ "$HARD" -gt 0 ] &amp;&amp; exit 2
+[ "$WARN" -gt 0 ] &amp;&amp; exit 1
+exit 0
+</code></pre></div>
+</article>
+<article class="filecard" id="f-sweep-sh">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">scripts/memory-health-sweep.sh</h4>
+<p class="filedesc">The one sanctioned recurring writer: refreshes one HEALTH.md per store, snapshots the operator store's backup repo, and notifies only when findings change.</p></div>
+<div class="filemeta"><span class="fm">109 lines</span><span class="fm">5,188 B</span><span class="fm">mode 0755</span><button class="copy" type="button" data-target="c-f-sweep-sh">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-sweep-sh">#!/usr/bin/env bash
+# scripts/memory-health-sweep.sh
+# The recurring (2-day) local sweep over both agent-memory stores. Runs where
+# both stores are actually visible - the workstation; CI and cloud runners
+# cannot see the operator store or the gitignored events/, so this sweep is
+# the only complete health surface.
+#
+# Contract:
+# - Report-only toward the stores' content: it never edits memories and never
+#   regenerates an index. Its only writes are (a) one idempotent HEALTH.md
+#   overwrite per store and (b) a snapshot commit+push of the operator-memory
+#   backup repo - the one sanctioned scheduled writer, targeting a dedicated
+#   repo with no PRs and no shared history. An empty diff produces no commit.
+# - Attention surfacing: a desktop notification (macOS osascript, when
+#   present) fires only when the report changed since the last sweep AND
+#   carries failures or warnings - new findings, not a 48-hour recital of
+#   known ones. On systems without osascript the notification is skipped and
+#   the exit code still carries the result.
+#
+# Intended trigger: launchd StartInterval 172800 (templates/launchd.plist.template)
+# or a systemd user timer (templates/systemd-user.{service,timer}.template),
+# or run manually at any time.
+#
+# Configuration (environment):
+#   MEMORY_SWEEP_REPO            repo root holding scripts/ and the agent
+#                                store; defaults to this script's parent dir
+#   MEMORY_SWEEP_OPERATOR_STORE  path to the operator memory store (REQUIRED -
+#                                it lives outside the repo, in the operator's
+#                                home, so there is no portable default)
+#   MEMORY_SWEEP_AGENT_STORE     path to the agent memory store; defaults to
+#                                $REPO/.claude/agent-memory/agent
+#   MEMORY_SWEEP_GIT_NAME        commit author name for the snapshot commit;
+#   MEMORY_SWEEP_GIT_EMAIL       both set -&gt; used as -c overrides, otherwise
+#                                the store's own git config identity applies
+
+set -uo pipefail
+IFS=$'\n\t'
+
+# launchd starts jobs with a bare PATH that misses Homebrew/local bins;
+# prepend them so ripgrep is visible to the health runs below. The rg gate
+# inside memory-health.sh remains the fail-closed authority - this line only
+# keeps the scheduled sweep from tripping it on every fire.
+PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Pin collation so sweep output and HEALTH.md diffs are locale-independent.
+export LC_ALL=C
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" &amp;&amp; pwd)
+REPO="${MEMORY_SWEEP_REPO:-$(cd "$SCRIPT_DIR/.." &amp;&amp; pwd)}"
+OPERATOR_STORE="${MEMORY_SWEEP_OPERATOR_STORE:-}"
+[ -n "$OPERATOR_STORE" ] || { echo "memory-health-sweep: MEMORY_SWEEP_OPERATOR_STORE is unset - point it at the operator memory store (it lives outside the repo, so there is no default)"; exit 2; }
+AGENT_STORE="${MEMORY_SWEEP_AGENT_STORE:-$REPO/.claude/agent-memory/agent}"
+HEALTH="$REPO/scripts/memory-health.sh"
+
+[ -x "$HEALTH" ] || { echo "memory-health-sweep: $HEALTH missing or not executable"; exit 2; }
+
+worst=0
+notify_lines=""
+
+run_store() { # $1=profile $2=store $3=extra-args...
+  profile="$1"; store="$2"; shift 2
+  new=$(mktemp)
+  {
+    printf 'Generated by scripts/memory-health-sweep.sh on %s\n\n' "$(date '+%Y-%m-%d %H:%M %Z')"
+    "$HEALTH" --profile "$profile" "$store" "$@"
+  } &gt; "$new" 2&gt;&amp;1
+  rc=$?
+  [ "$rc" -gt "$worst" ] &amp;&amp; worst=$rc
+  if [ "$rc" -ge 1 ]; then
+    if [ ! -f "$store/HEALTH.md" ] || ! diff -q &lt;(tail -n +2 "$new") &lt;(tail -n +2 "$store/HEALTH.md") &gt; /dev/null 2&gt;&amp;1; then
+      summary=$(tail -1 "$new")
+      notify_lines="${notify_lines}${profile}: ${summary}
+"
+    fi
+  fi
+  mv "$new" "$store/HEALTH.md"
+  return 0
+}
+
+run_store operator "$OPERATOR_STORE" --also-resolve "$AGENT_STORE"
+run_store agent "$AGENT_STORE" --also-resolve "$OPERATOR_STORE"
+
+# Snapshot the operator-memory backup repo (append-only history; empty diff
+# commits nothing; push is skipped quietly until a remote exists). Commit
+# identity comes from MEMORY_SWEEP_GIT_NAME/MEMORY_SWEEP_GIT_EMAIL when both
+# are set, else from the store's own git config.
+if [ -d "$OPERATOR_STORE/.git" ]; then
+  git -C "$OPERATOR_STORE" add -A
+  if ! git -C "$OPERATOR_STORE" diff --cached --quiet; then
+    if [ -n "${MEMORY_SWEEP_GIT_NAME:-}" ] &amp;&amp; [ -n "${MEMORY_SWEEP_GIT_EMAIL:-}" ]; then
+      git -C "$OPERATOR_STORE" -c user.name="$MEMORY_SWEEP_GIT_NAME" -c user.email="$MEMORY_SWEEP_GIT_EMAIL" \
+        commit -q -m "Scheduled memory snapshot ($(date '+%Y-%m-%d'))"
+    else
+      git -C "$OPERATOR_STORE" commit -q -m "Scheduled memory snapshot ($(date '+%Y-%m-%d'))"
+    fi
+  fi
+  if git -C "$OPERATOR_STORE" remote get-url origin &gt; /dev/null 2&gt;&amp;1; then
+    git -C "$OPERATOR_STORE" push -q origin main || notify_lines="${notify_lines}backup push failed
+"
+  fi
+fi
+
+# macOS-only attention surface; command -v guard degrades gracefully on Linux.
+if [ -n "$notify_lines" ] &amp;&amp; command -v osascript &gt; /dev/null 2&gt;&amp;1; then
+  osascript -e "display notification \"$(printf '%s' "$notify_lines" | head -3 | tr '\n' ' ' | sed 's/"/\\"/g')\" with title \"memory-health sweep\"" || true
+fi
+
+printf 'sweep done: worst exit %d\n' "$worst"
+exit "$worst"
+</code></pre></div>
+</article>
+</div>
+<div class="group">
+<h3 class="groupname">.github/workflows/</h3>
+<p class="groupintro">The CI gate. Path-filtered so feature PRs never pay for it; the filter includes the store, the three scripts, and the workflow file itself.</p>
+<article class="filecard" id="f-ci-yml">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">.github/workflows/memory-health.yml</h4>
+<p class="filedesc">Path-filtered CI gate for the agent store. Installs ripgrep explicitly (ubuntu runners do not ship it), gates only on hard failures (exit 2), and its path filter covers the tooling and itself.</p></div>
+<div class="filemeta"><span class="fm">42 lines</span><span class="fm">1,633 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-ci-yml">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-ci-yml">name: memory-health
+
+# Path-filtered gate for the agent memory store: verifies the committed
+# MEMORY.md byte-equals deterministic regeneration and that no hard hygiene
+# defect (dangling pointer, missing frontmatter, byte-duplicate, near-miss
+# wikilink) lands. Fires only when the memory tree or its tooling changes,
+# so feature PRs never pay for it. Warnings (exit 1) do not fail the job;
+# only hard failures (exit 2) do - and the checker fails closed (exit 2)
+# when ripgrep is missing, so it is installed explicitly below (ubuntu
+# runners do not ship it). The operator store lives outside the repo and is
+# covered by the local scheduled sweep, not by CI.
+
+on:
+  pull_request:
+    paths:
+      - ".claude/agent-memory/**"
+      - "scripts/memory-health.sh"
+      - "scripts/memory-index.sh"
+      - "scripts/memory-health-sweep.sh"
+      - ".github/workflows/memory-health.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  agent-store-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install ripgrep (the health checker fails closed without it)
+        run: sudo apt-get update -qq &amp;&amp; sudo apt-get install -y -qq ripgrep
+      - name: Run memory health check (gate on hard failures only)
+        run: |
+          set +e
+          scripts/memory-health.sh --profile agent .claude/agent-memory/agent
+          rc=$?
+          if [ "$rc" -ge 2 ]; then
+            echo "memory-health reported hard failures (exit $rc)"
+            exit "$rc"
+          fi
+          echo "memory-health exit $rc (warnings do not gate)"
+</code></pre></div>
+</article>
+</div>
+<div class="group">
+<h3 class="groupname">templates/</h3>
+<p class="groupintro">The canonical memory file shape and the two scheduler wirings (macOS launchd; Linux systemd user units).</p>
+<article class="filecard" id="f-template-md">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">templates/memory-template.md</h4>
+<p class="filedesc">The canonical memory file shape: the frontmatter contract (name, description, metadata.type) and the layout notes for both stores.</p></div>
+<div class="filemeta"><span class="fm">48 lines</span><span class="fm">2,514 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-template-md">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-template-md">---
+name: example-memory-slug
+description: One line stating the durable fact this memory carries.
+metadata:
+  type: reference
+---
+
+# example-memory-slug
+
+To create a new memory, copy this file into the store as
+`&lt;slug&gt;.md` (operator store root, or `lessons/&lt;slug&gt;.md` in the agent
+store), where `&lt;slug&gt;` matches the frontmatter `name`. Before creating,
+grep the store for the slug and its synonyms -- if a memory for this fact
+already exists, extend or supersede it instead of adding a near-duplicate.
+Then fill in the frontmatter:
+
+- `name` -- the memory's sole, immutable identity. A kebab-case slug
+  (`^[a-z0-9]+(-[a-z0-9]+)*$`), matching the filename, never containing
+  dates or anything else mutable, and never changed afterwards. Wikilinks
+  resolve against it; a wrong-but-shipped memory is superseded by a new
+  one, not renamed.
+- `description` -- exactly one single-line sentence saying what durable
+  fact the memory carries. It is copied verbatim into the generated
+  `MEMORY.md` index, so write it to be read out of context.
+- `metadata.type` -- one of `feedback` (a lesson about how to work),
+  `project` (a fact about this project's state or history), or
+  `reference` (a stable external or technical fact). The index groups by
+  this value; anything else is a hard health failure.
+
+Replace this body with the memory's content. A useful shape: what
+happened, what the durable lesson or fact is, what evidence backs it
+(dates, identifiers, paths), and links to related memories as
+`[[other-memory-slug]]` -- or `[[operator:some-slug]]` /
+`[[agent:some-slug]]` for a memory in the other store. Dates belong here
+in the body or frontmatter, never in the slug. Only the frontmatter block
+is parsed by the tooling, and parsing is delimiter-bounded, so the body
+may freely quote `name:` or `description:` lines (as this template does)
+without confusing the index generator or the health gate.
+
+Store layout note: an operator store is a flat directory of `&lt;slug&gt;.md`
+memory files plus three tooling-owned names -- `MEMORY.md` (the generated
+index; never hand-edited), `HEALTH.md` (the sweep's report), and optional
+`tmp_*` scratch files that carry a 7-day fuse before the health gate
+fails them. An agent store lives in the repo at
+`.claude/agent-memory/agent/` and holds `MEMORY.md` (generated index),
+`state.json` (tick checkpoint state), `events/&lt;YYYY-MM-DD&gt;.md` (one
+append-only file per UTC day), and `lessons/&lt;slug&gt;.md` -- the durable
+memories, which are the only files indexed and health-checked.
+</code></pre></div>
+</article>
+<article class="filecard" id="f-launchd">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">templates/launchd.plist.template</h4>
+<p class="filedesc">macOS scheduler for the sweep. Replace every __PLACEHOLDER__ token, install under ~/Library/LaunchAgents, load with launchctl. StartInterval 172800 = every 2 days; RunAtLoad false.</p></div>
+<div class="filemeta"><span class="fm">49 lines</span><span class="fm">1,809 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-launchd">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-launchd">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;!--
+  launchd template for the recurring memory-health sweep (macOS).
+
+  Replace every __PLACEHOLDER__ token, then install:
+
+    cp templates/launchd.plist.template ~/Library/LaunchAgents/__LABEL__.plist
+    launchctl load ~/Library/LaunchAgents/__LABEL__.plist
+
+  Tokens:
+    __LABEL__           reverse-DNS job label, e.g. com.example.memory-health
+                        (must match the installed plist filename sans .plist)
+    __REPO_ROOT__       absolute path to the repo that contains
+                        scripts/memory-health-sweep.sh
+    __OPERATOR_STORE__  absolute path to the operator memory store; the sweep
+                        refuses to run without MEMORY_SWEEP_OPERATOR_STORE
+    __LOG_PATH__        absolute path to a writable log file, e.g.
+                        ~/Library/Logs/memory-health-sweep.log (expanded)
+
+  StartInterval 172800 seconds = every 2 days. RunAtLoad is false so loading
+  the job does not fire an immediate sweep; run the script manually for an
+  on-demand pass. Remove this comment block or keep it - launchd ignores XML
+  comments either way.
+--&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+	&lt;key&gt;Label&lt;/key&gt;
+	&lt;string&gt;__LABEL__&lt;/string&gt;
+	&lt;key&gt;ProgramArguments&lt;/key&gt;
+	&lt;array&gt;
+		&lt;string&gt;/bin/bash&lt;/string&gt;
+		&lt;string&gt;__REPO_ROOT__/scripts/memory-health-sweep.sh&lt;/string&gt;
+	&lt;/array&gt;
+	&lt;key&gt;EnvironmentVariables&lt;/key&gt;
+	&lt;dict&gt;
+		&lt;key&gt;MEMORY_SWEEP_OPERATOR_STORE&lt;/key&gt;
+		&lt;string&gt;__OPERATOR_STORE__&lt;/string&gt;
+	&lt;/dict&gt;
+	&lt;key&gt;StartInterval&lt;/key&gt;
+	&lt;integer&gt;172800&lt;/integer&gt;
+	&lt;key&gt;RunAtLoad&lt;/key&gt;
+	&lt;false/&gt;
+	&lt;key&gt;StandardOutPath&lt;/key&gt;
+	&lt;string&gt;__LOG_PATH__&lt;/string&gt;
+	&lt;key&gt;StandardErrorPath&lt;/key&gt;
+	&lt;string&gt;__LOG_PATH__&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+</code></pre></div>
+</article>
+<article class="filecard" id="f-systemd-service">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">templates/systemd-user.service.template</h4>
+<p class="filedesc">Linux scheduler, service half. Pairs with the timer below; output goes to the user journal.</p></div>
+<div class="filemeta"><span class="fm">28 lines</span><span class="fm">1,119 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-systemd-service">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-systemd-service"># systemd user service template for the memory-health sweep (Linux).
+# Linux equivalent of templates/launchd.plist.template.
+#
+# Replace every __PLACEHOLDER__ token, then install alongside the timer:
+#
+#   cp templates/systemd-user.service.template \
+#      ~/.config/systemd/user/memory-health-sweep.service
+#   cp templates/systemd-user.timer.template \
+#      ~/.config/systemd/user/memory-health-sweep.timer
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now memory-health-sweep.timer
+#
+# Tokens:
+#   __REPO_ROOT__       absolute path to the repo that contains
+#                       scripts/memory-health-sweep.sh
+#   __OPERATOR_STORE__  absolute path to the operator memory store; the sweep
+#                       refuses to run without MEMORY_SWEEP_OPERATOR_STORE
+#
+# Output goes to the user journal:
+#   journalctl --user -u memory-health-sweep.service
+
+[Unit]
+Description=Agent-memory health sweep (report-only, plus operator-store snapshot)
+
+[Service]
+Type=oneshot
+Environment=MEMORY_SWEEP_OPERATOR_STORE=__OPERATOR_STORE__
+ExecStart=/bin/bash __REPO_ROOT__/scripts/memory-health-sweep.sh
+</code></pre></div>
+</article>
+<article class="filecard" id="f-systemd-timer">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">templates/systemd-user.timer.template</h4>
+<p class="filedesc">Linux scheduler, timer half. OnUnitActiveSec=2d mirrors the launchd interval; Persistent=true fires a missed run at the next login instead of silently skipping it.</p></div>
+<div class="filemeta"><span class="fm">17 lines</span><span class="fm">516 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-systemd-timer">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-systemd-timer"># systemd user timer template for the memory-health sweep (Linux).
+# Pairs with templates/systemd-user.service.template; see that file for the
+# install steps. OnUnitActiveSec=2d mirrors the launchd StartInterval of
+# 172800 seconds. Persistent=true fires a missed run at the next login
+# instead of silently skipping it.
+
+[Unit]
+Description=Run the agent-memory health sweep every 2 days
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=2d
+Persistent=true
+Unit=memory-health-sweep.service
+
+[Install]
+WantedBy=timers.target
+</code></pre></div>
+</article>
+</div>
+<div class="group">
+<h3 class="groupname">docs/</h3>
+<p class="groupintro">The two documents: the design rationale and the operations runbook.</p>
+<article class="filecard" id="f-design-md">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">docs/DESIGN.md</h4>
+<p class="filedesc">Every non-obvious decision, each with the failure mode that motivated it. The rationale section at the end of this page maps the guarantees to these headings.</p></div>
+<div class="filemeta"><span class="fm">220 lines</span><span class="fm">11,569 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-design-md">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-design-md"># Design decisions
+
+Every non-obvious decision in this harness, with the failure mode that
+motivated it. These are written as portable engineering lessons: each one
+was paid for at least once, and each transfers to any system with the same
+shape -- small files, links between them, an index, and more than one
+environment running the tooling.
+
+## Derived-state index over hand-maintained dual-write
+
+`MEMORY.md` is generated by `scripts/memory-index.sh` from file frontmatter.
+It is never edited by hand, and the health gate hard-fails when the
+committed index differs from regeneration.
+
+The alternative -- an index maintained alongside the files -- is a
+dual-write, and dual-writes have a known failure mode: the two writes are
+not atomic, so every add, delete, or description change is an opportunity
+to update one side and forget the other. The observable symptom is orphan
+rate: index entries pointing at files that no longer exist, and files that
+never made it into the index. Orphans accumulate silently because nothing
+consumes the index strictly enough to notice.
+
+A derived index eliminates the class rather than policing it. The index is
+a pure function of the corpus; regeneration is idempotent; drift is
+mechanically detectable (`diff` against regeneration) and mechanically
+repairable (regenerate). The general lesson: when state B is a function of
+state A, derive B -- do not maintain B and check it against A. Checking is
+strictly weaker than deriving; deriving makes the drift impossible.
+
+Sort order is type group, then filename -- deliberately not recency. File
+mtimes are not stable across clones, and recency is recoverable from git
+log, while the property that each new memory diffs as exactly one line is
+not recoverable from a recency sort. Choose sort keys that are stable under
+clone and that minimize diff noise.
+
+## Frontmatter name as the sole immutable link identity
+
+Each memory declares a kebab-case `name:` in frontmatter. Wikilinks
+(`[[target]]`) resolve against the union of names and filenames sans
+extension. The name is immutable for the life of the memory.
+
+Rationale: something has to be the join key, and everything mutable makes a
+bad one. Titles get reworded; descriptions get sharpened; dates go stale.
+The moment the join key changes, every inbound reference dangles -- and in
+a corpus written by an agent across many sessions, nobody is watching the
+inbound references. So the identity is a slug, the slug never changes, and
+everything mutable lives in fields that nothing links against.
+
+Two corollaries:
+
+- **Supersede, never rename.** A memory whose content became wrong is not
+  renamed or rewritten into something else; a new memory is written that
+  states the correction, and the old one either points at it or is left as
+  historical record. The old name keeps resolving forever, so no link ever
+  breaks retroactively. This is the same discipline as never rewriting
+  shared git history: identities that others may hold references to are
+  append-only.
+
+- **Grandfather allowlist for legacy divergence.** A rule adopted after a
+  corpus already exists will have violators that cannot be fixed without
+  breaking the rule itself (renaming a legacy file to fix its slug breaks
+  its links -- the exact harm the rule exists to prevent). The pattern:
+  a shell variable in the checker (`GRANDFATHER`, `GRANDFATHER_DIVERGED`),
+  one slug per line, that exempts named legacy files from the check. It
+  ships empty: a fresh adoption has no pre-rule history. The critical
+  property is that the allowlist is frozen at adoption time -- adding an
+  entry for a new file is using the escape hatch as a policy change, which
+  the comments in the script explicitly forbid. New violations are fixed;
+  old ones are named and tolerated.
+
+## Normalized identity comparison
+
+The name-identity check does not require the frontmatter name to equal the
+filename byte-for-byte. Both are first normalized -- type prefix stripped
+(`feedback`/`project`/`reference`/`tmp` plus `-` or `_`), underscores
+folded to dashes -- and the normalized forms are compared.
+
+Strict basename equality fails on legacy corpora: files created under older
+conventions carry type prefixes and underscore separators in the filename
+while the frontmatter name uses the clean slug. Those are the same identity
+spelled two ways, and flagging them buries the real signal in noise. What
+the check must catch is a true lineage fork: a frontmatter name that
+denotes a different memory than the filename does, so that a grep for the
+slug misses the name and a grep for the name misses the slug -- at which
+point the dedup check ("does a memory for this already exist?") silently
+answers no and a duplicate lineage is born. Normalization separates the
+two cases: spelling variants collapse, forks survive and fail hard.
+
+The same normalization powers the near-miss wikilink check: a link that
+resolves only after normalization is a typo at the link site, not an
+aspiration, and is failed hard with a suggestion -- fix the link, not the
+file.
+
+## Fail-closed toolchain preflight
+
+`memory-health.sh` dies (exit 2) if ripgrep is not on PATH, before running
+a single check.
+
+The trap this closes: the wikilink and checkpoint checks are built on `rg`.
+If `rg` is missing and the failure is soft, those checks return empty
+result sets -- which is indistinguishable from "no broken links". A sick
+store reports healthy, and it reports healthy precisely in the environments
+most likely to be missing the tool: fresh CI runners (ubuntu images do not
+ship ripgrep) and scheduler contexts with a bare PATH. A gate that can be
+silently disarmed by its own environment is not a gate.
+
+The general rule: when a checker's dependencies are absent, the checker
+must report "cannot check" as a failure, never "nothing found". The CI
+workflow installs ripgrep explicitly, and the scripts prepend the common
+local bin directories to PATH for scheduler contexts -- but those are
+conveniences; the preflight remains the authority.
+
+## Collation pinning
+
+Every script exports `LC_ALL=C` before doing anything else.
+
+The failure this fixes: `sort` order is locale-dependent, and the harness
+runs under at least three locales -- an interactive macOS shell (typically
+a UTF-8 locale), launchd (bare environment), and a Linux CI runner. An
+unpinned collation produced index output whose sort order drifted across
+those environments: the same store regenerated on two machines gave two
+byte-different indexes, and the health gate's drift check -- correctly --
+failed, blaming the store for a property of the environment. The line-set
+algebra in the checker (`sort -u`, `uniq`, `grep -x` against sorted files)
+has the same sensitivity.
+
+Lesson: any script whose output is compared byte-for-byte across
+environments, or that feeds `sort` output into set operations, must pin its
+collation. `LC_ALL=C` is the only portable pin.
+
+## Delimiter-bounded frontmatter parsing
+
+Frontmatter is extracted by an awk program that takes only the lines
+between the leading `---` delimiter pair, and nothing else:
+
+    awk 'NR==1{if($0!="---")exit; next} /^---$/{exit} {print}'
+
+The naive alternative -- grepping the whole file for `^name:` -- has a
+self-referential failure mode: a memory that documents the memory template
+(this harness ships one in `templates/memory-template.md`) quotes `name:`
+and `description:` lines in its body. Whole-file grep counts those quoted
+lines as real keys and fails the file for duplicate frontmatter -- the
+store's own documentation trips the gate. Bounding the parse at the
+closing delimiter makes body content, fenced or not, invisible to the
+checker and the index generator alike.
+
+The bound also fails safe in the other direction: a file that does not
+start with `---` yields empty frontmatter, so the exactly-one-key check
+fails it hard rather than half-parsing it.
+
+The parser is deliberately not a YAML library: the contract is single-line
+scalar values only, enforced by the gate, and bash 3.2 + awk covers that.
+The flip triggers are written in the script header: adopt a real parser
+the day frontmatter needs nesting beyond single-line scalars, a health run
+exceeds 5 seconds, or a store crosses 2000 files.
+
+## Single sanctioned writer, notify-on-change
+
+Exactly one scheduled process is allowed to write anything:
+`memory-health-sweep.sh`. Its writes are narrow and idempotent -- one
+`HEALTH.md` overwrite per store, plus a snapshot commit of the operator
+store's backup repo (empty diff commits nothing). The health checker
+itself is read-only by contract; the index generator writes only to stdout.
+
+Why: recurring automation that mutates state is where unattended damage
+compounds. A scheduled job that "helpfully" regenerates indexes or edits
+memories will eventually do so against a store mid-edit, or after a path
+moved, and each firing compounds the damage. Confining all scheduled
+writes to one auditable script with an append-only output (report file,
+snapshot history) caps the blast radius of every misfire at "a stale
+report".
+
+Notification discipline: the sweep raises a desktop notification only when
+the report differs from the previous sweep AND carries failures or
+warnings. A recurring notifier that re-announces known findings every fire
+trains its operator to ignore it within a week; new-findings-only keeps
+the signal alive. On systems without a notifier the exit code still
+carries the result.
+
+## Gate self-coverage in the CI path filter
+
+The CI workflow is path-filtered so feature PRs never pay for it, but the
+filter includes not just the store (`.claude/agent-memory/**`) but the
+three scripts and the workflow file itself.
+
+A gate whose own implementation can change without the gate running is a
+gate that can be broken -- or quietly disarmed -- by the very PR that
+breaks it. Including the tooling and workflow paths in the filter means
+any PR that touches the checker, the generator, the sweep, or the gate
+definition must pass the gate it just modified. Cheap, and it converts
+"the gate was silently broken three weeks ago" into "this PR is red".
+
+## The dead-man gap (known limit)
+
+The scheduled sweep has a dead-man problem this harness documents rather
+than solves: if the sweep stops firing -- the repo the scheduler points at
+was moved or deleted, the checked-out branch no longer contains the
+scripts, the plist was unloaded, the machine was replaced -- nothing
+notices. The notification path only fires on new findings, so silence is
+indistinguishable from health.
+
+Recommended mitigations, in preference order:
+
+- **Dedicated stable clone for the scheduler.** Point the scheduler at a
+  clone used for nothing else, pinned to the default branch, at a path
+  that never moves. This removes the dominant failure cause (the working
+  clone being moved, rebased, or checked out to an old branch under the
+  scheduler's feet).
+
+- **Session-start freshness check.** The sweep stamps its generation time
+  on the first line of each `HEALTH.md`. An agent session-start hook (or a
+  shell profile line) that compares that stamp against the sweep interval
+  and warns when it is older than two intervals converts silent scheduler
+  death into a visible nag exactly where the operator is looking.
+
+Both mitigations are deployment choices, not shipped code -- which
+scheduler, which clone, and which session hook are all adopter-specific.
+The limit itself is the portable lesson: any cron-shaped safety net needs
+either a heartbeat consumer or a freshness check at the point of use,
+because the failure mode of a scheduler is silence.
+</code></pre></div>
+</article>
+<article class="filecard" id="f-operations-md">
+<header class="filehead">
+<div class="fileid"><h4 class="filepath">docs/OPERATIONS.md</h4>
+<p class="filedesc">Install runbook (launchd and systemd), environment variable reference, the mirror-backup flow, the falsification test recipe for the gate, and troubleshooting.</p></div>
+<div class="filemeta"><span class="fm">340 lines</span><span class="fm">16,000 B</span><span class="fm">mode 0644</span><button class="copy" type="button" data-target="c-f-operations-md">copy file</button></div>
+</header>
+<div class="codewrap"><pre><code id="c-f-operations-md"># Operations
+
+Install runbook, environment reference, the mirror-backup flow, the
+falsification test recipe for the health gate, and troubleshooting.
+
+Throughout, `$REPO` is the repo that holds `scripts/` and the agent store,
+and `$OPERATOR_STORE` is the operator store directory outside any repo.
+
+## Install runbook
+
+### Prerequisites (both platforms)
+
+- bash 3.2 or newer (macOS system bash is enough by design).
+- ripgrep (`rg`) on PATH. The health checker fails closed without it.
+  macOS: `brew install ripgrep`. Debian/Ubuntu: `apt-get install ripgrep`.
+- The three scripts under `$REPO/scripts/`, executable
+  (`chmod +x scripts/memory-*.sh`).
+- Both stores initialized and indexed (see the README quickstart), and a
+  clean baseline run: `memory-health.sh` exits 0 or 1 on each store.
+
+### macOS (launchd)
+
+1. Copy `templates/launchd.plist.template` and replace every
+   `__PLACEHOLDER__` token:
+
+   - `__LABEL__` -- reverse-DNS job label, e.g. `com.example.memory-health`.
+     Must match the installed plist filename sans `.plist`.
+   - `__REPO_ROOT__` -- absolute path to `$REPO`.
+   - `__OPERATOR_STORE__` -- absolute path to the operator store; the sweep
+     refuses to run without `MEMORY_SWEEP_OPERATOR_STORE`.
+   - `__LOG_PATH__` -- absolute path to a writable log file, e.g. the
+     expansion of `~/Library/Logs/memory-health-sweep.log`.
+
+2. Install and load:
+
+       cp filled-in.plist ~/Library/LaunchAgents/__LABEL__.plist
+       launchctl load ~/Library/LaunchAgents/__LABEL__.plist
+
+3. Verify: `launchctl list | grep __LABEL__` shows the job. The template
+   sets `StartInterval` 172800 (every 2 days) and `RunAtLoad` false, so
+   loading does not fire an immediate sweep -- run
+   `scripts/memory-health-sweep.sh` by hand once to confirm the wiring and
+   seed the first `HEALTH.md` in each store.
+
+### Linux (systemd user units)
+
+1. Copy both templates and replace `__REPO_ROOT__` and
+   `__OPERATOR_STORE__`:
+
+       cp templates/systemd-user.service.template \
+          ~/.config/systemd/user/memory-health-sweep.service
+       cp templates/systemd-user.timer.template \
+          ~/.config/systemd/user/memory-health-sweep.timer
+
+2. Enable:
+
+       systemctl --user daemon-reload
+       systemctl --user enable --now memory-health-sweep.timer
+
+3. Verify: `systemctl --user list-timers` shows the timer;
+   `journalctl --user -u memory-health-sweep.service` shows run output.
+   The timer fires 15 minutes after boot, then every 2 days;
+   `Persistent=true` fires a missed run at the next login instead of
+   silently skipping it.
+
+On either platform, prefer pointing the scheduler at a dedicated stable
+clone rather than your working clone -- see the dead-man section of
+`docs/DESIGN.md` for why.
+
+## Environment variable reference
+
+All variables are read by `scripts/memory-health-sweep.sh`.
+
+| Variable                      | Required | Default                                | Meaning                                                        |
+| ----------------------------- | -------- | -------------------------------------- | -------------------------------------------------------------- |
+| `MEMORY_SWEEP_OPERATOR_STORE` | yes      | none                                   | Path to the operator store. It lives outside the repo, in the operator's home, so there is no portable default; the sweep exits 2 when unset. |
+| `MEMORY_SWEEP_REPO`           | no       | the script's parent directory          | Repo root holding `scripts/` and the agent store.               |
+| `MEMORY_SWEEP_AGENT_STORE`    | no       | `$REPO/.claude/agent-memory/agent`     | Path to the agent store.                                        |
+| `MEMORY_SWEEP_GIT_NAME`       | no       | store's own git config                 | Author name for the snapshot commit. Used only when the email is also set. |
+| `MEMORY_SWEEP_GIT_EMAIL`      | no       | store's own git config                 | Author email for the snapshot commit. Used only when the name is also set. |
+
+`memory-health.sh` and `memory-index.sh` take no environment configuration;
+everything is flags (`--profile`, the store root, and for the health
+checker the optional `--also-resolve &lt;other-store-root&gt;`).
+
+## Mirror-backup flow
+
+The operator store lives outside any project repo, so nothing backs it up
+unless you make it a repo of its own.
+
+1. Create an empty private repository on your git host (no README, no
+   initial commit -- the store's history starts locally).
+
+2. Initialize the store as a repo on branch `main` (the sweep pushes
+   `origin main` specifically) and connect it:
+
+       cd "$OPERATOR_STORE"
+       git init -b main
+       git add -A
+       git commit -m "Initial memory snapshot"
+       git remote add origin &lt;private-repo-url&gt;
+       git push -u origin main
+
+3. From then on, every sweep run: stages everything (`git add -A`), commits
+   only when the staged diff is non-empty, with the message
+   `Scheduled memory snapshot (YYYY-MM-DD)`, and pushes to `origin main`
+   when an `origin` remote exists. Commit identity comes from
+   `MEMORY_SWEEP_GIT_NAME`/`MEMORY_SWEEP_GIT_EMAIL` when both are set,
+   otherwise from the store's own git config.
+
+Lost-remote behavior:
+
+- No `origin` configured: the push is skipped quietly. Snapshots still
+  accumulate as local commits, so wiring a remote later pushes the full
+  accumulated history in one go.
+- `origin` configured but unreachable or deleted: the push fails, the
+  sweep appends `backup push failed` to its notification lines and keeps
+  going. Nothing is lost -- history is local-first. Repair the remote (or
+  create a fresh private repo and repoint `origin`), then either wait for
+  the next sweep or push by hand.
+
+## Falsification test recipe
+
+Never trust a gate you have not watched fire. This recipe seeds one defect
+per hard check into a disposable fixture store and states the expected
+`FAIL` line and exit code for each. Run it once at adoption, and again
+after any change to `memory-health.sh`.
+
+Ground rules:
+
+- Work only on the fixture, never on a real store.
+- After each mutation: run the checker, confirm the expected line appears
+  and `echo $?` prints the expected code, then restore the fixture (the
+  simplest restore is to rebuild it from step 1).
+- A seeded frontmatter defect usually also trips `index drift`, because
+  the index derives from frontmatter. That collateral finding is correct
+  behavior; assert the target line is present, not that it is alone.
+
+### Fixture setup (operator profile)
+
+    STORE=$(mktemp -d)
+    cat &gt; "$STORE/first-lesson.md" &lt;&lt;'EOF'
+    ---
+    name: first-lesson
+    description: First fixture memory for the falsification run.
+    metadata:
+      type: reference
+    ---
+    Fixture body. Related: [[second-lesson]].
+    EOF
+    cat &gt; "$STORE/second-lesson.md" &lt;&lt;'EOF'
+    ---
+    name: second-lesson
+    description: Second fixture memory for the falsification run.
+    metadata:
+      type: project
+    ---
+    Fixture body.
+    EOF
+    scripts/memory-index.sh --profile operator "$STORE" &gt; "$STORE/MEMORY.md"
+    scripts/memory-health.sh --profile operator "$STORE"
+
+Baseline expectation: `== result: 0 hard failure(s), 0 warning(s) ==`,
+exit 0. Do not proceed until the baseline is clean.
+
+### Mutation matrix (hard checks, expected exit 2)
+
+Missing index. Seed: `rm "$STORE/MEMORY.md"`. Expect:
+`FAIL  no MEMORY.md index in $STORE`.
+Restore: regenerate the index.
+
+Index drift. Seed: `echo extra &gt;&gt; "$STORE/MEMORY.md"`. Expect:
+`FAIL  index drift: MEMORY.md differs from regeneration (run: ...)`
+followed by an indented diff excerpt.
+Restore: regenerate the index.
+
+Dangling index pointer. Seed: append a fake entry,
+`echo '- [ghost](ghost.md) — gone' &gt;&gt; "$STORE/MEMORY.md"`. Expect:
+`FAIL  dangling index pointer: ghost.md` (plus index drift).
+Restore: regenerate the index.
+
+Index generator failure. Seed: `chmod -x scripts/memory-index.sh`.
+Expect: `FAIL  index generator failed for $STORE`.
+Restore: `chmod +x scripts/memory-index.sh`.
+
+Missing frontmatter key. Seed: delete the `description:` line from
+`first-lesson.md`. Expect:
+`FAIL  frontmatter: first-lesson.md has 0 'description:' lines (want exactly 1)`.
+The same check reports 2 lines if you duplicate the key instead.
+Restore fixture.
+
+Empty name. Seed: change the name line to `name:` (no value). Expect:
+`FAIL  frontmatter: first-lesson.md has 'name:' with an empty value - nameless memories index as broken links`
+(plus a collateral key-count failure: a bare `name:` no longer matches
+the `name: ` key pattern, so the exactly-one check reports 0 lines).
+Restore fixture.
+
+Non-slug name. Seed: set `name: First Lesson Prose Title`. Expect:
+`FAIL  name is not a kebab slug: first-lesson.md has name 'First Lesson Prose Title' - ...`.
+Restore fixture.
+
+Name-identity divergence. Seed: set `name: totally-different-slug` in
+`first-lesson.md` (a valid slug that is not the filename's). Expect:
+`FAIL  name-identity divergence: first-lesson.md has name 'totally-different-slug' - a diverged name forks the dedup lineage: ...`.
+Restore fixture.
+
+Missing type. Seed: delete the `type:` line. Expect:
+`FAIL  frontmatter: first-lesson.md has no type`.
+Restore fixture.
+
+Type fragmentation. Seed: set `type: lesson`. Expect:
+`FAIL  type fragmentation: first-lesson.md has type 'lesson' (want feedback|project|reference)`.
+Restore fixture.
+
+Byte duplicates. Seed:
+`cp "$STORE/first-lesson.md" "$STORE/copied-lesson.md"`. Expect:
+`FAIL  byte-duplicate files: copied-lesson.md first-lesson.md` (order per
+sort; collateral name-identity and index-drift findings also fire, since
+the copy carries the original's name).
+Restore: `rm "$STORE/copied-lesson.md"`; regenerate the index.
+
+Near-miss wikilink. Seed: append `See [[first_lesson]].` to the body of
+`second-lesson.md` (underscore where the slug has a dash). Expect:
+`FAIL  near-miss wikilink: [[first_lesson]] in second-lesson.md - did you mean: first-lesson`.
+Restore fixture.
+
+Aspirational wikilink, escalated. Seed: append `[[missing-target]]` to the
+body of both fixture files. Expect:
+`FAIL  aspirational wikilink in 2 files: [[missing-target]] - two files rely on a memory that does not exist; write it or fix the links`.
+With the link in only one file, expect instead
+`WARN  aspirational wikilink: [[missing-target]] (allowed while single-referenced)`
+and exit 1.
+Restore fixture.
+
+Expired tmp scratch (operator profile only). Seed:
+
+    touch "$STORE/tmp_probe.md"
+    # macOS:
+    touch -mt "$(date -v-8d +%Y%m%d%H%M)" "$STORE/tmp_probe.md"
+    # Linux:
+    touch -d '8 days ago' "$STORE/tmp_probe.md"
+
+Expect: `FAIL  expired tmp scratch (&gt;7 days): tmp_probe.md - promote to a memory or delete`.
+With a fresh mtime instead, expect
+`WARN  tmp scratch present: tmp_probe.md (7-day fuse; ...)` and exit 1.
+Restore: `rm "$STORE/tmp_probe.md"`.
+
+Checkpoint behind log (agent profile only). Seed a minimal agent fixture:
+
+    ASTORE=$(mktemp -d)
+    mkdir -p "$ASTORE/lessons" "$ASTORE/events"
+    cp "$STORE/second-lesson.md" "$ASTORE/lessons/second-lesson.md"
+    scripts/memory-index.sh --profile agent "$ASTORE" &gt; "$ASTORE/MEMORY.md"
+    echo 'tick at 2024-01-02T10:00:00Z' &gt; "$ASTORE/events/2024-01-02.md"
+    echo '{"last_tick_iso": "2024-01-01T00:00:00Z"}' &gt; "$ASTORE/state.json"
+    scripts/memory-health.sh --profile agent "$ASTORE"
+
+Expect:
+`FAIL  checkpoint behind log: state.json last_tick_iso=2024-01-01T00:00:00Z &lt; newest event stamp 2024-01-02T10:00:00Z`.
+Setting `last_tick_iso` to `2024-01-02T10:00:00Z` or later flips it to
+`info  checkpoint ok: ...` and exit 0.
+
+Fail-closed preflight. Seed: make `rg` genuinely unfindable. Note that a
+stripped `PATH` is not enough -- the script prepends `/opt/homebrew/bin`
+and `/usr/local/bin` itself, so if ripgrep lives under one of those
+prefixes, temporarily rename the binary
+(`mv "$(command -v rg)" "$(command -v rg).hidden"`, restore afterwards),
+or run the check in a container or CI runner that has no ripgrep
+installed. Expect on stderr:
+`memory-health: FATAL: ripgrep (rg) not found on PATH - ...`,
+exit 2, and no check output at all -- proving a missing tool cannot
+produce a clean-looking report.
+
+### Warning tier spot-checks (expected exit 1)
+
+- Date-bearing slug: create `note-2024-01-01.md` with valid frontmatter
+  whose name is also `note-2024-01-01` (digits and dashes are legal in a
+  kebab slug, and matching the filename avoids a collateral divergence
+  failure), regenerate the index, and expect
+  `WARN  date-bearing slug: note-2024-01-01.md (mutable data in an immutable identity; frontmatter holds dates)`.
+- Index line budget: only reachable on large stores; expect
+  `WARN  index line budget: MEMORY.md has N lines (budget 190 of the 200-line prompt load)`
+  once the generated index exceeds 190 lines.
+- Cross-store link: add `[[operator:first-lesson]]` to an agent-store
+  lesson and run without `--also-resolve` -- expect an `info` line; run
+  with `--also-resolve` pointing at a store that lacks the target --
+  expect `WARN  cross-store link unresolvable: [[operator:first-lesson]]`.
+
+### CI gate self-test
+
+Open a throwaway PR that seeds any one hard defect into the agent store
+(index drift is the cheapest: edit one character of the committed
+`MEMORY.md`). The `memory-health` workflow must trigger (the path filter
+covers `.claude/agent-memory/**`) and the job must fail with
+`memory-health reported hard failures (exit 2)`. Close the PR without
+merging. If the workflow did not trigger at all, the path filter does not
+match your store location -- fix the filter, not the store.
+
+## Troubleshooting
+
+**`memory-health: FATAL: ripgrep (rg) not found on PATH`.**
+This is the fail-closed preflight, not a bug: the wikilink and checkpoint
+checks depend on `rg`, and partial results must not report a store as
+healthy. Install ripgrep. In scheduler contexts note that launchd and CI
+runners start with a bare PATH; the scripts prepend `/opt/homebrew/bin`
+and `/usr/local/bin` themselves, so if your `rg` lives elsewhere, extend
+`PATH` in the scheduler unit or workflow. The shipped CI workflow installs
+ripgrep explicitly because ubuntu runners do not ship it.
+
+**Index drift failures that only reproduce on one machine or in CI.**
+Classic locale-drift symptom: the diff excerpt shows the same entries in a
+different order, none added or removed. The shipped scripts pin
+`export LC_ALL=C`, so a committed index generated by them cannot drift
+this way -- the stale side is a `MEMORY.md` that was generated by an older
+unpinned script or sorted by hand. Regenerate with the shipped generator
+and commit the result. If drift persists, diff the two environments'
+`sort` behavior directly with slug-shaped input --
+`printf 'a_b\na-b\nab\n' | sort` -- dashes and underscores are exactly
+where UTF-8 collations disagree with C, and memory slugs are full of
+both. Both environments must give the C order.
+
+**Sweeps stopped happening / HEALTH.md is stale.**
+Check the generation stamp on the first line of each store's `HEALTH.md`;
+older than two sweep intervals means the scheduler is not firing or the
+sweep is dying early. Usual cause: the scheduler points at a moved or
+deleted path -- the repo was relocated, or the checked-out branch no
+longer contains `scripts/`. Diagnose on macOS via the `__LOG_PATH__` log
+file and `launchctl list __LABEL__` (a non-zero last-exit status), on
+Linux via `journalctl --user -u memory-health-sweep.service`. Fix the
+path in the plist or unit (reload it afterwards), or better, point the
+scheduler at a dedicated stable clone as recommended in `docs/DESIGN.md`.
+Remember the sweep also exits 2 immediately when
+`MEMORY_SWEEP_OPERATOR_STORE` is unset -- an edited unit that dropped the
+environment block produces exactly this symptom.
+
+**`backup push failed` in the sweep notification.**
+The snapshot commit succeeded locally; only the push to `origin main`
+failed. Check `git -C "$OPERATOR_STORE" remote -v` and push by hand to see
+the real error (auth expired, repo deleted, offline). Nothing is lost --
+see the lost-remote behavior above.
+</code></pre></div>
+</article>
+</div></section>
+<section id="rationale"><p class="kicker">rationale</p><h2>Why it is built this way</h2><p>Every guarantee above traces to a section of the embedded <a href="#f-design-md">docs/DESIGN.md</a>, and every section there was paid for at least once. The map, in one pass:</p><ul class="rationale"><li><b>Derived-state index over hand-maintained dual-write</b> - when state B is a function of state A, derive B; do not maintain B and check it against A. Checking is strictly weaker than deriving; deriving makes the drift impossible.</li><li><b>Frontmatter name as the sole immutable link identity</b> - everything mutable makes a bad join key. Supersede, never rename; the grandfather allowlists ship empty and are frozen at adoption time.</li><li><b>Normalized identity comparison</b> - spelling variants (type prefixes, underscores) collapse; true lineage forks survive normalization and fail hard. The same normalization turns a near-miss wikilink into a hard failure with a suggestion.</li><li><b>Fail-closed toolchain preflight</b> - when a checker's dependencies are absent it must report <em>cannot check</em> as a failure, never <em>nothing found</em>. A gate that can be silently disarmed by its own environment is not a gate.</li><li><b>Collation pinning</b> - any script whose output is compared byte-for-byte across environments must pin <code>LC_ALL=C</code>; index drift between locales looks exactly like a hygiene failure.</li><li><b>Delimiter-bounded frontmatter parsing</b> - the parse stops at the closing <code>---</code>, so a memory that quotes <code>name:</code> lines in its body (the shipped template does) cannot trip the gate or corrupt the index.</li><li><b>Single sanctioned writer, notify-on-change</b> - recurring automation that mutates state is where unattended damage compounds; confining scheduled writes to one auditable script caps every misfire at a stale report, and new-findings-only notification keeps the signal alive.</li><li><b>Gate self-coverage in the CI path filter</b> - the filter includes the checker, the generator, the sweep, and the workflow itself, so any PR that touches the gate must pass the gate it just modified.</li><li><b>The dead-man gap</b> - the one documented, unsolved limit: a scheduler's failure mode is silence. Mitigations (a dedicated stable clone; a session-start freshness check against the <code>HEALTH.md</code> stamp) are deployment choices, spelled out in the doc.</li></ul><p style="margin-top:18px">The full argument for each, with the concrete failure that motivated it, is in <a href="#f-design-md">docs/DESIGN.md</a> above - part of the kit, so the reasoning travels with the code.</p></section>
+<footer class="foot">agent-memory-harness &middot; 11 files &middot; 66,703 bytes &middot; reconstruct: paste each block verbatim, then chmod +x scripts/memory-*.sh</footer>
+</div>
+<script>
+document.querySelectorAll('.copy').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var code = document.getElementById(btn.dataset.target);
+    if(!code) return;
+    var text = code.textContent;
+    var done = function(ok){
+      var prev = 'copy file';
+      btn.textContent = ok ? 'copied' : 'copy failed';
+      btn.classList.add(ok ? 'done' : 'fail');
+      setTimeout(function(){ btn.textContent = prev; btn.classList.remove('done','fail'); }, 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ fallback(); });
+    } else { fallback(); }
+    function fallback(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch(e) {}
+      ta.remove(); done(ok);
+    }
+  });
+});
+</script>
+</body>
+</html>

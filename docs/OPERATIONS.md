@@ -119,6 +119,66 @@ Lost-remote behavior:
   create a fresh private repo and repoint `origin`), then either wait for
   the next sweep or push by hand.
 
+### As built: main app repo with memory in a separate private repo
+
+The exact pattern this harness was extracted from: one main application
+repo carries the tooling and the agent store, and a second, private repo
+owns the operator store's history. The generic flow above covers the
+store-side git mechanics and the lost-remote behavior; these steps add
+the wiring order and the two moments that need a human, from the
+perspective of someone wiring their main application repo.
+
+1. The harness scripts live in the main app repo: `scripts/memory-*.sh`
+   plus the CI workflow under `.github/workflows/`. The agent store
+   lives inside that repo too (`.claude/agent-memory/agent`); the
+   operator store lives outside it, in the operator's home.
+
+2. Create an empty private repo on the git host under the identity that
+   should own the memory history. That is often a dedicated bot or agent
+   account, not your personal account: the snapshot history then reads
+   as the agent's, and personal credentials stay out of the scheduler.
+
+3. Initialize the operator store as its own git repo on branch `main`
+   (the sweep pushes `origin main` specifically) and make the first
+   commit:
+
+       cd "$OPERATOR_STORE"
+       git init -b main
+       git add -A
+       git commit -m "Initial memory snapshot"
+
+4. Wire the remote over SSH. When the memory repo belongs to a second
+   identity, use an SSH host alias with its own key so pushes
+   authenticate as that identity without touching global git config.
+   In `~/.ssh/config`:
+
+       Host memory-mirror
+         HostName <git-host>
+         User git
+         IdentityFile ~/.ssh/id_ed25519_memory
+
+   then point the store's remote at the alias:
+
+       git -C "$OPERATOR_STORE" remote add origin \
+         git@memory-mirror:<owner>/<repo>.git
+
+5. The first push is performed by a human: `git push -u origin main`.
+   If your agent tooling enforces a push-approval policy, repo creation
+   and this first push are exactly the two moments it will gate. From
+   then on the scheduled sweep is the single sanctioned pusher and needs
+   no agent involvement.
+
+6. Set `MEMORY_SWEEP_OPERATOR_STORE` in the scheduler unit (the launchd
+   plist or systemd service), and optionally `MEMORY_SWEEP_GIT_NAME` /
+   `MEMORY_SWEEP_GIT_EMAIL` so snapshot commits carry the memory-owning
+   identity instead of the store's local git config.
+
+7. Verify end to end: run `scripts/memory-health-sweep.sh` by hand once
+   and check that `git -C "$OPERATOR_STORE" ls-remote origin main`
+   advances to the new snapshot commit. Note that interactive sessions
+   may also commit to the store between sweeps; the sweep pushes
+   whatever local commits are pending, not only its own snapshots.
+
 ## Falsification test recipe
 
 Never trust a gate you have not watched fire. This recipe seeds one defect

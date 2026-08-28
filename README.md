@@ -43,6 +43,18 @@ you the machinery to keep those invariants true:
       DESIGN.md                every design decision, with rationale
       OPERATIONS.md            install runbook, env vars, falsification
                                recipe, troubleshooting
+      harness-diagram.html     browsable overview, two figures
+      kit.html                 browsable single-page kit
+
+## Browsable pages
+
+The kit ships two self-contained HTML pages; open them directly in a
+browser, no server needed:
+
+- [docs/harness-diagram.html](docs/harness-diagram.html) -- two figures
+  showing how the harness works end to end, including the mirror push.
+- [docs/kit.html](docs/kit.html) -- the entire kit on one page, every file
+  embedded with a per-file copy button.
 
 ## Quickstart
 

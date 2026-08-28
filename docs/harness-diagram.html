@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memory Harness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f5f7f3;
+    --surface: #fdfefc;
+    --surface-2: #eef2ea;
+    --ink: #1e251e;
+    --muted: #5b675b;
+    --line: #d3dcd0;
+    --line-strong: #aab8a8;
+    --accent: #1e6e55;
+    --accent-soft: #e1efe7;
+    --warn: #986410;
+    --warn-soft: #f7eed8;
+    --warn-line: #d9c08a;
+    --edge: #7a877a;
+    --code-bg: #edf1e9;
+    --display: "Bricolage Grotesque", "Avenir Next", "Helvetica Neue", sans-serif;
+    --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #151a16;
+      --surface: #1d231e;
+      --surface-2: #232b24;
+      --ink: #e2e8df;
+      --muted: #99a595;
+      --line: #333e35;
+      --line-strong: #4d5c4f;
+      --accent: #5cc29e;
+      --accent-soft: #21362c;
+      --warn: #dca855;
+      --warn-soft: #33290f;
+      --warn-line: #5f4d23;
+      --edge: #8b998b;
+      --code-bg: #232b24;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #151a16;
+    --surface: #1d231e;
+    --surface-2: #232b24;
+    --ink: #e2e8df;
+    --muted: #99a595;
+    --line: #333e35;
+    --line-strong: #4d5c4f;
+    --accent: #5cc29e;
+    --accent-soft: #21362c;
+    --warn: #dca855;
+    --warn-soft: #33290f;
+    --warn-line: #5f4d23;
+    --edge: #8b998b;
+    --code-bg: #232b24;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15.5px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 48px 24px 72px;
+  }
+
+  /* ---------- header ---------- */
+  .eyebrow {
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 4.5vw, 2.9rem);
+    line-height: 1.05;
+    margin: 0 0 14px;
+    text-wrap: balance;
+  }
+  .lede {
+    max-width: 62ch;
+    color: var(--muted);
+    margin: 0;
+  }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 56px; }
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .kicker {
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  section > p { max-width: 68ch; color: var(--muted); margin: 0 0 8px; }
+  section > p strong { color: var(--ink); font-weight: 600; }
+  code {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.08em 0.35em;
+    white-space: nowrap;
+  }
+  pre {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    margin: 14px 0 0;
+  }
+  pre code { background: none; border: 0; padding: 0; white-space: pre; }
+
+  /* ---------- figures ---------- */
+  figure {
+    margin: 22px 0 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 16px 12px;
+    overflow-x: auto;
+  }
+  figure svg { display: block; min-width: 720px; max-width: 100%; height: auto; margin: 0 auto; }
+  figcaption {
+    font-size: 0.8rem;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    margin-top: 14px;
+    padding: 10px 6px 2px;
+    max-width: none;
+  }
+
+  /* SVG vocabulary */
+  .n-box   { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; }
+  .n-box-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.3; }
+  .n-box-warn   { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.1; stroke-dasharray: 5 4; }
+  .n-title { font-family: var(--body); font-weight: 600; font-size: 12.5px; fill: var(--ink); }
+  .n-mono  { font-family: var(--mono); font-size: 10px; fill: var(--accent); }
+  .n-mono-lg { font-family: var(--mono); font-weight: 600; font-size: 12px; fill: var(--ink); }
+  .n-line  { font-family: var(--body); font-size: 10.5px; fill: var(--muted); }
+  .edge        { stroke: var(--edge); stroke-width: 1.4; fill: none; }
+  .edge-accent { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .edge-warn   { stroke: var(--warn); stroke-width: 1.4; fill: none; stroke-dasharray: 6 5; }
+  .elabel        { font-family: var(--body); font-size: 10.5px; fill: var(--muted); }
+  .elabel-mono   { font-family: var(--mono); font-size: 9.5px; fill: var(--muted); }
+  .elabel-accent { font-family: var(--body); font-size: 11px; font-weight: 500; fill: var(--accent); }
+  .elabel-warn   { font-family: var(--body); font-size: 10.5px; font-weight: 500; fill: var(--warn); }
+  .lane-label { font-family: var(--body); font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; fill: var(--muted); }
+  .lane-line  { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 5; }
+  .chip-box  { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1; }
+  .chip-text { font-family: var(--mono); font-size: 9.5px; fill: var(--ink); }
+  .ah  { fill: var(--edge); }
+  .ah-accent { fill: var(--accent); }
+  .ah-warn   { fill: var(--warn); }
+  .xmark { stroke: var(--warn); stroke-width: 2; }
+
+  /* ---------- cards ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.02rem;
+    margin: 0 0 2px;
+  }
+  .card .path {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--accent);
+    margin: 0 0 10px;
+    word-break: break-all;
+  }
+  .card ul { margin: 0; padding-left: 18px; }
+  .card li { font-size: 0.86rem; color: var(--muted); margin: 5px 0; }
+  .card li strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- exit contract ---------- */
+  .exit-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 4px; }
+  .exit {
+    flex: 1 1 200px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 12px 16px;
+  }
+  .exit .code {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .exit .name { font-weight: 600; font-size: 0.88rem; margin-left: 8px; }
+  .exit p { margin: 4px 0 0; font-size: 0.8rem; color: var(--muted); }
+  .exit-2 { border-color: var(--accent); }
+  .exit-2 .code { color: var(--accent); }
+
+  .checks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 8px 20px;
+    margin-top: 14px;
+    padding: 0;
+    list-style: none;
+  }
+  .checks li {
+    font-size: 0.84rem;
+    color: var(--muted);
+    border-left: 2px solid var(--accent);
+    padding: 2px 0 2px 12px;
+  }
+  .checks li b { color: var(--ink); font-weight: 600; display: block; font-size: 0.86rem; }
+  .checks.warn-checks li { border-left-color: var(--line-strong); }
+
+  .footnote { font-size: 0.8rem; color: var(--muted); margin-top: 14px; max-width: 68ch; }
+
+  /* ---------- gap panel ---------- */
+  .gap {
+    margin-top: 20px;
+    border: 1px solid var(--warn-line);
+    background: var(--warn-soft);
+    border-radius: 10px;
+    padding: 18px 22px;
+  }
+  .gap h3 {
+    font-family: var(--display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--warn);
+    margin: 0 0 8px;
+    letter-spacing: 0.02em;
+  }
+  .gap p { margin: 0 0 8px; font-size: 0.88rem; max-width: 72ch; }
+  .gap p:last-child { margin-bottom: 0; }
+  .gap code { background: var(--surface); }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Reference &middot; agent-memory-harness</p>
+    <h1>Memory Harness</h1>
+    <p class="lede">How agent memory persists, indexes, and defends itself:
+    <strong>two stores</strong>, one <strong>derived index</strong>, one <strong>read-only health
+    gate</strong>, and <strong>three enforcement surfaces</strong> &mdash; plus the one gap the
+    harness currently has, drawn honestly.</p>
+  </header>
+
+  <!-- ============================================================ -->
+  <section>
+    <p class="kicker">Figure 1</p>
+    <h2>The write&ndash;read loop</h2>
+    <p>Sessions append memories to the stores; <code>scripts/memory-index.sh</code> projects
+    frontmatter into <code>MEMORY.md</code>; the index is what loads back into agent context at
+    the next session start. The index is <strong>derived, never authored</strong> &mdash; the one
+    failure this system has actually had was a hand edit of <code>MEMORY.md</code>, a dual write
+    that orphaned entries.</p>
+
+    <figure>
+      <svg viewBox="0 0 1000 470" role="img"
+           aria-label="Flow diagram: Claude sessions write memory files into the operator store and the in-repo agent store; memory-index.sh reads both stores' frontmatter and regenerates MEMORY.md, which is loaded back into agent context at session start. A crossed-out amber edge marks hand-editing MEMORY.md as the forbidden dual write.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah"/>
+          </marker>
+          <marker id="ah-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah-accent"/>
+          </marker>
+          <marker id="ah-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah-warn"/>
+          </marker>
+        </defs>
+
+        <!-- return edge: index -> sessions -->
+        <path class="edge-accent" marker-end="url(#ah-accent)"
+              d="M 910 176 C 910 44, 640 26, 500 26 C 360 26, 112 44, 108 181"/>
+        <text class="elabel-accent" x="500" y="16" text-anchor="middle">loaded into agent context at session start</text>
+
+        <!-- forbidden edge: sessions -> MEMORY.md by hand -->
+        <path class="edge-warn" marker-end="url(#ah-warn)"
+              d="M 108 285 C 108 438, 360 452, 510 452 C 700 452, 910 428, 910 292"/>
+        <line class="xmark" x1="503" y1="445" x2="517" y2="459"/>
+        <line class="xmark" x1="517" y1="445" x2="503" y2="459"/>
+        <text class="elabel-warn" x="510" y="434" text-anchor="middle">hand edit &mdash; the dual write that orphaned index entries</text>
+
+        <!-- sessions -->
+        <rect class="n-box" x="24" y="185" width="168" height="96" rx="10"/>
+        <text class="n-title" x="108" y="222" text-anchor="middle" font-size="13.5">Claude sessions</text>
+        <text class="n-line" x="108" y="243" text-anchor="middle">operator + agent turns</text>
+        <text class="n-line" x="108" y="259" text-anchor="middle">write memories</text>
+
+        <!-- operator store -->
+        <rect class="n-box" x="280" y="48" width="252" height="140" rx="10"/>
+        <text class="n-title" x="296" y="76">Operator store</text>
+        <text class="n-mono" x="296" y="97">~/.claude/projects/&lt;proj&gt;/memory/</text>
+        <text class="n-line" x="296" y="120">git repo &mdash; outside the project repo</text>
+        <text class="n-line" x="296" y="138">one .md file per memory</text>
+        <text class="n-line" x="296" y="156">frontmatter: name / description / type</text>
+
+        <!-- agent store -->
+        <rect class="n-box" x="280" y="282" width="252" height="140" rx="10"/>
+        <text class="n-title" x="296" y="310">In-repo agent store</text>
+        <text class="n-mono" x="296" y="331">.claude/agent-memory/</text>
+        <text class="n-mono" x="296" y="345">&nbsp;&nbsp;&lt;agent&gt;/</text>
+        <text class="n-line" x="296" y="368">lessons/ &mdash; indexed memories</text>
+        <text class="n-line" x="296" y="386">events/ + state.json &mdash; gitignored</text>
+
+        <!-- generator -->
+        <rect class="n-box" x="596" y="178" width="200" height="110" rx="10"/>
+        <text class="n-mono-lg" x="696" y="206" text-anchor="middle">memory-index.sh</text>
+        <text class="n-line" x="696" y="229" text-anchor="middle">pure projection of frontmatter</text>
+        <text class="n-line" x="696" y="246" text-anchor="middle">type group, then filename</text>
+        <text class="n-line" x="696" y="263" text-anchor="middle">LC_ALL=C &middot; idempotent</text>
+
+        <!-- index -->
+        <rect class="n-box-accent" x="840" y="178" width="140" height="110" rx="10"/>
+        <text class="n-mono-lg" x="910" y="208" text-anchor="middle">MEMORY.md</text>
+        <text class="n-line" x="910" y="231" text-anchor="middle">derived index</text>
+        <text class="n-line" x="910" y="248" text-anchor="middle">one per store</text>
+        <text class="n-line" x="910" y="265" text-anchor="middle">never hand-edited</text>
+
+        <!-- writes -->
+        <path class="edge" marker-end="url(#ah)" d="M 192 216 C 238 216, 240 118, 278 118"/>
+        <text class="elabel" x="231" y="152" text-anchor="middle">appends</text>
+        <text class="elabel" x="231" y="166" text-anchor="middle">memory files</text>
+        <path class="edge" marker-end="url(#ah)" d="M 192 254 C 238 254, 240 352, 278 352"/>
+        <text class="elabel" x="231" y="316" text-anchor="middle">appends lessons,</text>
+        <text class="elabel" x="231" y="330" text-anchor="middle">events, state</text>
+
+        <!-- reads -->
+        <path class="edge" marker-end="url(#ah)" d="M 532 118 C 568 118, 566 205, 594 205"/>
+        <text class="elabel-mono" x="560" y="158" text-anchor="middle">--profile operator</text>
+        <path class="edge" marker-end="url(#ah)" d="M 532 352 C 568 352, 566 261, 594 261"/>
+        <text class="elabel-mono" x="560" y="322" text-anchor="middle">--profile agent</text>
+
+        <!-- regenerate -->
+        <path class="edge-accent" marker-end="url(#ah-accent)" d="M 796 233 L 837 233"/>
+        <text class="elabel" x="817" y="222" text-anchor="middle">stdout</text>
+      </svg>
+      <figcaption>The only sanctioned path into <code>MEMORY.md</code> is regeneration:
+      <code>memory-index.sh --profile &lt;p&gt; &lt;store&gt; &gt; MEMORY.md</code>. Sort order is
+      deliberately type-group-then-filename, not recency &mdash; deterministic one-line diffs per
+      added memory.</figcaption>
+    </figure>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Operator store</h3>
+        <p class="path">~/.claude/projects/&lt;proj&gt;/memory/</p>
+        <ul>
+          <li>A <strong>git repo of its own</strong>, outside the project repo &mdash; snapshot history plus a private remote backup.</li>
+          <li>One markdown file per memory; frontmatter carries <strong>name / description / type</strong> (<code>feedback</code> | <code>project</code> | <code>reference</code>).</li>
+          <li>The <strong>name is the immutable identity</strong>: kebab-case, filename == name, never renamed &mdash; superseded instead.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>In-repo agent store</h3>
+        <p class="path">.claude/agent-memory/&lt;agent&gt;/</p>
+        <ul>
+          <li><code>lessons/</code> holds the indexed memories; same frontmatter contract.</li>
+          <li><code>events/</code> and <code>state.json</code> stay <strong>gitignored</strong> &mdash; workstation-local run state, invisible to CI.</li>
+          <li>Its <code>MEMORY.md</code> carries a 200-line prompt-load budget (warned at 190).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <p class="kicker">The gate</p>
+    <h2>memory-health.sh, the read-only checker</h2>
+    <p>One script audits a store and <strong>never mutates anything</strong>. Its exit code is the
+    contract every enforcement surface builds on. It <strong>fails closed</strong> &mdash; exit 2
+    &mdash; when ripgrep is missing, and pins <code>LC_ALL=C</code> so reports and regenerated
+    indexes are byte-identical across the interactive shell, launchd, and the CI runner.</p>
+
+    <div class="exit-row">
+      <div class="exit"><span class="code">0</span><span class="name">clean</span><p>No findings, or informational only.</p></div>
+      <div class="exit"><span class="code">1</span><span class="name">warnings</span><p>Reported, never blocking &mdash; surfaced by the sweep.</p></div>
+      <div class="exit exit-2"><span class="code">2</span><span class="name">hard failure</span><p>Any check below. The only code CI blocks on.</p></div>
+    </div>
+
+    <ul class="checks">
+      <li><b>index drift</b>MEMORY.md differs from a fresh regeneration</li>
+      <li><b>dangling index pointer</b>index entry whose file does not exist</li>
+      <li><b>frontmatter keys</b>name / description / type missing or duplicated</li>
+      <li><b>non-slug name</b>name not kebab-case &mdash; the name is the link identity</li>
+      <li><b>empty name</b><code>name:</code> present with an empty value</li>
+      <li><b>name-identity split</b>normalized basename diverges from normalized name</li>
+      <li><b>type fragmentation</b>type outside feedback | project | reference</li>
+      <li><b>byte duplicates</b>two files with identical content</li>
+      <li><b>near-miss wikilink</b>[[target]] that resolves only after slug normalization &mdash; a typo, fixed at the link site</li>
+      <li><b>expired tmp scratch</b>tmp_* older than 7 days (operator profile)</li>
+      <li><b>checkpoint behind</b>state.json last_tick_iso older than the newest event (agent profile)</li>
+    </ul>
+
+    <p class="footnote">Warnings (exit 1): aspirational wikilinks (escalating to hard once two files
+    want the same target), tmp scratch present, index over line budget, date-bearing slugs, and
+    cross-store <code>[[operator:x]]</code> / <code>[[agent:x]]</code> links that fail to resolve
+    when <code>--also-resolve</code> is given.</p>
+  </section>
+
+  <!-- ============================================================ -->
+  <section>
+    <p class="kicker">Figure 2</p>
+    <h2>Enforcement: three surfaces, one writer</h2>
+    <p>Both lanes converge on the same checker. CI can only see the in-repo store, so it gates hard
+    failures on PRs; the launchd sweep is the only surface that sees <strong>both</strong> stores
+    &mdash; and it is the <strong>single sanctioned scheduled writer</strong>, producing
+    <code>HEALTH.md</code>, the notification, and the mirror push.</p>
+
+    <figure>
+      <svg viewBox="0 0 1040 600" role="img"
+           aria-label="Two-lane enforcement diagram. CI lane: a PR touching the memory surface passes a path filter into memory-health.yml, which runs memory-health.sh and blocks merge only on exit 2. Workstation lane: a launchd timer every two days executes memory-health-sweep.sh from the main working tree; the sweep runs memory-health.sh on both stores, writes HEALTH.md into each, notifies only on changed findings, and snapshot-commits and pushes the operator store to a private mirror repo over SSH. An amber box marks the known gap: the job is dead while the tree is on a branch without the scripts.">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah"/>
+          </marker>
+          <marker id="ah2-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah-accent"/>
+          </marker>
+          <marker id="ah2-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="ah-warn"/>
+          </marker>
+        </defs>
+
+        <!-- lanes -->
+        <text class="lane-label" x="24" y="34">CI &mdash; GITHUB RUNNER</text>
+        <text class="lane-label" x="24" y="292">WORKSTATION &mdash; LAUNCHD</text>
+        <line class="lane-line" x1="12" y1="256" x2="588" y2="256"/>
+        <line class="lane-line" x1="824" y1="256" x2="1028" y2="256"/>
+
+        <!-- CI trigger -->
+        <rect class="n-box" x="24" y="60" width="204" height="120" rx="10"/>
+        <text class="n-title" x="40" y="88">PR touches memory surface</text>
+        <text class="n-mono" x="40" y="112">.claude/agent-memory/**</text>
+        <text class="n-mono" x="40" y="128">scripts/memory-*.sh</text>
+        <text class="n-mono" x="40" y="144">workflows/memory-health.yml</text>
+        <text class="n-line" x="40" y="166">covers its own workflow file</text>
+
+        <!-- CI workflow -->
+        <rect class="n-box" x="300" y="60" width="224" height="120" rx="10"/>
+        <text class="n-mono-lg" x="316" y="90">memory-health.yml</text>
+        <text class="n-line" x="316" y="114">path-filtered PR gate</text>
+        <text class="n-line" x="316" y="132">installs ripgrep on the runner</text>
+        <text class="n-line" x="316" y="150">in-repo store only &mdash; the</text>
+        <text class="n-line" x="316" y="166">operator store is invisible here</text>
+
+        <!-- merge gate -->
+        <rect class="n-box" x="856" y="60" width="160" height="120" rx="10"/>
+        <text class="n-title" x="872" y="90">Merge gate</text>
+        <text class="n-line" x="872" y="114">blocks on exit 2</text>
+        <text class="n-line" x="872" y="132">hard failures only</text>
+        <text class="n-line" x="872" y="150">warnings pass</text>
+
+        <!-- shared checker -->
+        <rect class="n-box-accent" x="600" y="186" width="212" height="140" rx="10"/>
+        <text class="n-mono-lg" x="706" y="214" text-anchor="middle">memory-health.sh</text>
+        <rect class="chip-box" x="618" y="228" width="54" height="22" rx="6"/>
+        <text class="chip-text" x="645" y="243" text-anchor="middle">0 clean</text>
+        <rect class="chip-box" x="680" y="228" width="52" height="22" rx="6"/>
+        <text class="chip-text" x="706" y="243" text-anchor="middle">1 warn</text>
+        <rect class="chip-box" x="740" y="228" width="54" height="22" rx="6"/>
+        <text class="chip-text" x="767" y="243" text-anchor="middle">2 hard</text>
+        <text class="n-line" x="706" y="278" text-anchor="middle">read-only &mdash; never mutates</text>
+        <text class="n-line" x="706" y="296" text-anchor="middle">fails closed without ripgrep</text>
+        <text class="n-line" x="706" y="314" text-anchor="middle">LC_ALL=C pinned</text>
+
+        <!-- launchd trigger -->
+        <rect class="n-box" x="24" y="330" width="204" height="120" rx="10"/>
+        <text class="n-title" x="40" y="358">launchd timer</text>
+        <text class="n-mono" x="40" y="382">com.example</text>
+        <text class="n-mono" x="40" y="396">&nbsp;&nbsp;.memory-health.plist</text>
+        <text class="n-line" x="40" y="420">StartInterval 172800 &mdash; 2 days</text>
+
+        <!-- sweep -->
+        <rect class="n-box" x="300" y="330" width="224" height="120" rx="10"/>
+        <text class="n-mono-lg" x="316" y="358">memory-health-sweep.sh</text>
+        <text class="n-line" x="316" y="382">report-only toward the stores</text>
+        <text class="n-line" x="316" y="400">the single sanctioned</text>
+        <text class="n-line" x="316" y="418">scheduled writer</text>
+
+        <!-- outputs -->
+        <rect class="n-box" x="856" y="340" width="160" height="64" rx="10"/>
+        <text class="n-mono-lg" x="872" y="366">HEALTH.md</text>
+        <text class="n-line" x="872" y="386">into both stores</text>
+
+        <rect class="n-box" x="856" y="424" width="160" height="64" rx="10"/>
+        <text class="n-title" x="872" y="450">macOS notification</text>
+        <text class="n-line" x="872" y="470">changed findings only</text>
+
+        <rect class="n-box-accent" x="856" y="508" width="160" height="80" rx="10"/>
+        <text class="n-title" x="872" y="536">private mirror repo</text>
+        <text class="n-line" x="872" y="556">GitHub &middot; SSH</text>
+        <text class="n-line" x="872" y="572">works agentless</text>
+
+        <!-- gap -->
+        <rect class="n-box-warn" x="24" y="496" width="500" height="88" rx="10"/>
+        <text class="elabel-warn" x="40" y="522" font-weight="600" letter-spacing="0.08em">KNOWN GAP</text>
+        <text class="n-line" x="40" y="542">runs from the main working tree &mdash; dead while that tree sits</text>
+        <text class="n-line" x="40" y="558">on a branch without the scripts; failures land only in a log file</text>
+        <text class="n-line" x="40" y="574">(dead-man check: future work)</text>
+
+        <!-- CI edges -->
+        <path class="edge" marker-end="url(#ah2)" d="M 228 120 L 297 120"/>
+        <text class="elabel" x="263" y="110" text-anchor="middle">path filter</text>
+        <path class="edge" marker-end="url(#ah2)" d="M 524 120 C 566 120, 592 152, 634 183"/>
+        <text class="elabel" x="588" y="136" text-anchor="middle">run</text>
+        <path class="edge" marker-end="url(#ah2)" d="M 812 216 C 838 208, 842 166, 855 138"/>
+        <text class="elabel" x="852" y="196" text-anchor="middle">exit code</text>
+
+        <!-- workstation edges -->
+        <path class="edge" marker-end="url(#ah2)" d="M 228 390 L 297 390"/>
+        <text class="elabel" x="263" y="380" text-anchor="middle">exec</text>
+        <path class="edge-warn" marker-end="url(#ah2-warn)" d="M 263 396 L 263 493"/>
+
+        <path class="edge" marker-end="url(#ah2)" d="M 524 358 C 558 358, 566 294, 597 294"/>
+        <text class="elabel" x="560" y="330" text-anchor="middle">both stores</text>
+        <text class="elabel-mono" x="560" y="343" text-anchor="middle">--also-resolve</text>
+
+        <path class="edge" marker-end="url(#ah2)" d="M 524 386 C 650 386, 740 372, 853 372"/>
+        <text class="elabel" x="694" y="364" text-anchor="middle">overwrites each sweep, idempotent</text>
+        <path class="edge" marker-end="url(#ah2)" d="M 524 404 C 660 404, 726 456, 853 456"/>
+        <text class="elabel" x="676" y="426" text-anchor="middle">notify</text>
+        <path class="edge-accent" marker-end="url(#ah2-accent)" d="M 524 424 C 690 434, 750 548, 853 548"/>
+        <text class="elabel-accent" x="700" y="480" text-anchor="middle">snapshot commit + push</text>
+      </svg>
+      <figcaption>The sweep prepends <code>/opt/homebrew/bin</code> so launchd's bare PATH still
+      finds ripgrep; the fail-closed gate inside <code>memory-health.sh</code> remains the
+      authority. An empty diff in the operator store produces no commit and no push.</figcaption>
+    </figure>
+
+    <div class="cards">
+      <div class="card">
+        <h3>CI gate</h3>
+        <p class="path">.github/workflows/memory-health.yml</p>
+        <ul>
+          <li>Fires only on PRs touching the in-repo store, the <code>memory-*.sh</code> tooling, or the workflow file itself.</li>
+          <li>Installs ripgrep, then gates on <strong>exit 2 only</strong> &mdash; warnings never block a merge.</li>
+          <li>Cannot see the operator store or gitignored <code>events/</code>; cross-store links report as informational here.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Launchd sweep</h3>
+        <p class="path">com.example.memory-health.plist</p>
+        <ul>
+          <li>Every 2 days (<code>StartInterval 172800</code>) runs <code>memory-health-sweep.sh</code> over <strong>both stores</strong> with cross-store link resolution.</li>
+          <li>Writes one idempotent <code>HEALTH.md</code> per store; notification fires only when a report with findings <strong>changed</strong> since the last sweep.</li>
+          <li>The only complete health surface &mdash; nothing else sees both stores.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Mirror push</h3>
+        <p class="path">operator store &rarr; private mirror repo</p>
+        <ul>
+          <li>The same sweep is the <strong>single sanctioned scheduled writer</strong>: it stages the operator store, snapshot-commits, and pushes over SSH.</li>
+          <li>Append-only history, no PRs, no shared branches; an empty diff commits nothing.</li>
+          <li>Works agentless from a scheduler context &mdash; no ssh-agent required.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="gap">
+      <h3>Known gap &mdash; the sweep dies with the working tree</h3>
+      <p>The launchd job executes <code>scripts/memory-health-sweep.sh</code> from the
+      <strong>main working tree</strong> of the project repo. When that tree is checked out on a
+      branch that does not carry the memory scripts, the job either fails to exec or exits 2 at its
+      own <code>[ -x memory-health.sh ]</code> guard &mdash; and the failure lands only in a log
+      file. No notification, no CI signal, nothing watches the watcher.</p>
+    </div>
+  </section>
+
+  <footer>
+    Projection of <code>scripts/memory-index.sh</code>, <code>memory-health.sh</code>,
+    <code>memory-health-sweep.sh</code>, the scheduler template, and the
+    <code>memory-health.yml</code> CI workflow.
+  </footer>
+</div>
+</body>
+</html>
