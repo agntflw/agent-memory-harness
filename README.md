@@ -127,6 +127,27 @@ Both `memory-health.sh` and the sweep honour the same contract:
 The sweep exits with the worst code across both stores.
 `memory-index.sh` exits `2` on fatal errors and `0` otherwise.
 
+## License
+
+MIT with the Commons Clause License Condition v1.0 attached; the Licensor
+is AGENTFLOW S.R.L. The full text is in [LICENSE](LICENSE), and the license
+text governs -- this summary only states the intent:
+
+- You may use, copy, modify, and embed the harness in your own projects,
+  open-source or commercial, at no charge.
+- Businesses may build and sell products and services with it and monetize
+  work that uses it -- the restriction below is only about the harness
+  itself.
+- You may not Sell the Software: offering the harness itself -- or hosting,
+  consulting, or support whose value derives entirely or substantially from
+  it -- to third parties for a fee is not licensed.
+- Redistribution must keep the copyright notice, the MIT permission notice,
+  and the Commons Clause condition notice together.
+
+Note: with the Commons Clause attached this is source-available software,
+not open source under the OSI definition; projects with a strict
+OSI-only licensing policy should evaluate accordingly.
+
 ## FAQ
 
 **Why a generated index instead of maintaining MEMORY.md by hand?**
